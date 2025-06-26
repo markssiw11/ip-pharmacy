@@ -33,7 +33,6 @@ const credentialsSchema = insertApiCredentialsSchema.extend({
 export function ConnectionSettings() {
   const [apiEnabled, setApiEnabled] = useState(true);
   const { toast } = useToast();
-  const [showSecretId, setShowSecretId] = useState(true);
 
   const testConnectionMutation = useTestConnection();
   const toggleApiMutation = useToggleApiConnection();

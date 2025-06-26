@@ -23,6 +23,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "./ui/pagination";
+import { useApiConfig } from "@/services/connect";
 
 export function OrderSync() {
   const { toast } = useToast();
@@ -39,7 +40,8 @@ export function OrderSync() {
   });
   const orderSyncMutation = useOrderSync();
 
-  console.log("Orders Data:", orders);
+  const { data: config } = useApiConfig();
+
   const orderData = useMemo(() => {
     return (orders?.data || []).map((order) => ({
       id: order.id,
@@ -72,6 +74,12 @@ export function OrderSync() {
       });
     }
   };
+
+  const isDisabled = useMemo(() => {
+    return (
+      !config?.connection || orderSyncMutation.isPending || !config?.is_active
+    );
+  }, [orderSyncMutation?.isPending, config?.connection, config?.is_active]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -113,7 +121,7 @@ export function OrderSync() {
             </div>
             <Button
               onClick={handleManualSync}
-              disabled={orderSyncMutation.isPending}
+              disabled={isDisabled}
               className="bg-blue-600 hover:bg-blue-700"
             >
               <RefreshCw
@@ -121,7 +129,9 @@ export function OrderSync() {
                   orderSyncMutation.isPending ? "animate-spin" : ""
                 }`}
               />
-              {orderSyncMutation.isPending ? "Syncing..." : "Manual Sync"}
+              {orderSyncMutation.isPending
+                ? "Đang Cập Nhật..."
+                : "Cập Nhật Thủ Công"}
             </Button>
           </div>
         </div>
@@ -131,22 +141,22 @@ export function OrderSync() {
             <TableHeader>
               <TableRow className="bg-gray-50">
                 <TableHead className="font-medium text-gray-500 uppercase text-xs tracking-wider">
-                  Order ID
+                  Mã Đơn Hàng
                 </TableHead>
                 <TableHead className="font-medium text-gray-500 uppercase text-xs tracking-wider">
-                  Customer
+                  Khách Hàng
                 </TableHead>
                 <TableHead className="font-medium text-gray-500 uppercase text-xs tracking-wider">
-                  Date
+                  Ngày Mua
                 </TableHead>
                 <TableHead className="font-medium text-gray-500 uppercase text-xs tracking-wider">
-                  Total
+                  Giá Tiền
                 </TableHead>
                 <TableHead className="font-medium text-gray-500 uppercase text-xs tracking-wider">
-                  Status
+                  Trạng Thái
                 </TableHead>
                 <TableHead className="font-medium text-gray-500 uppercase text-xs tracking-wider">
-                  Branch
+                  Chi Nhánh
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -205,15 +215,14 @@ export function OrderSync() {
 
         <div className="flex items-center justify-between mt-6">
           <div className="text-sm text-gray-700">
-            Showing{" "}
             <span className="font-medium">
               {conditions.page * orderData.length - orderData.length}
             </span>{" "}
-            to{" "}
+            đến{" "}
             <span className="font-medium">
               {conditions.page * orderData.length}
             </span>{" "}
-            of <span className="font-medium">{ordersCount}</span> results
+            của <span className="font-medium">{ordersCount}</span> kết quả
           </div>
           <Pagination className="mt-4">
             <PaginationContent>

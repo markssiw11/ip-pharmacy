@@ -43,26 +43,6 @@ export function useInventoryStats() {
   });
 }
 
-export function useInventorySync() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      await delay(3000);
-      return {
-        success: true,
-        recordsCount: 1247,
-        syncedAt: new Date(),
-      };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/sync-logs"] });
-    },
-  });
-}
-
 export function useSyncLogs() {
   return useQuery({
     queryKey: ["/api/sync-logs"],
