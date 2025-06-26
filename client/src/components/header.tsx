@@ -1,5 +1,6 @@
 import { User } from "lucide-react";
 import { useApiConnection } from "@/hooks/use-kiotviet-api";
+import logo from "@/images/logo.png";
 
 export function Header() {
   const { data: connectionStatus } = useApiConnection();
@@ -9,7 +10,8 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex items-center space-x-2">
+              <img className="h-8 w-auto" src={logo} alt="IB Pharmacy Logo" />
               <h1 className="text-2xl font-bold text-gray-900">IB Pharmacy</h1>
             </div>
           </div>

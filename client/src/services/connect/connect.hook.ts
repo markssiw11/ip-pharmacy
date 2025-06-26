@@ -44,7 +44,7 @@ export function useToggleApiConnection() {
       return { enabled };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/connection/isActive"] });
+      queryClient.invalidateQueries({ queryKey: ["/connection/config"] });
     },
   });
 }

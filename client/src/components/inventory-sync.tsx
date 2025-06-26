@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   RefreshCw,
   Package,
@@ -26,14 +26,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import {
-  useInventorySync,
-  useInventoryStats,
-  useSyncLogs,
-} from "@/hooks/use-kiotviet-api";
+import { useInventoryStats, useSyncLogs } from "@/hooks/use-kiotviet-api";
 import { formatCurrency, getRelativeTime, branches } from "@/lib/mock-data";
-import { useInventory } from "@/services/inventory";
+import { useInventory, useInventorySync } from "@/services/inventory";
 import { cn } from "@/lib/utils";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
+import { Input } from "./ui/input";
+import debounce from "lodash.debounce";
+import { useApiConfig } from "@/services/connect";
 
 export function InventorySync() {
   const [conditions, setConditions] = useState({
@@ -41,16 +48,14 @@ export function InventorySync() {
     limit: 10,
     status: undefined,
     purchase_date: undefined,
+    search: "",
   });
   const { toast } = useToast();
 
   const { data: inventory, isLoading: inventoryLoading } =
     useInventory(conditions);
-  const { data: stats, isLoading: statsLoading } = useInventoryStats();
-  const { data: syncLogs } = useSyncLogs();
   const inventorySyncMutation = useInventorySync();
-
-  const lastInventorySync = syncLogs?.find((log) => log.type === "inventory");
+  const { data: config } = useApiConfig();
 
   const inventoryData = useMemo(() => {
     return (inventory?.data || []).map((item) => ({
@@ -60,6 +65,18 @@ export function InventorySync() {
   }, [inventory?.data]);
 
   console.log("Inventory Data:", inventoryData);
+
+  const total = useMemo(() => {
+    return inventory?.total || 0;
+  }, [inventory?.total]);
+
+  const isDisabled = useMemo(() => {
+    return (
+      !config?.connection ||
+      inventorySyncMutation.isPending ||
+      !config?.is_active
+    );
+  }, [inventorySyncMutation?.isPending, config?.connection, config?.is_active]);
 
   const handleManualSync = async () => {
     try {
@@ -79,18 +96,29 @@ export function InventorySync() {
 
   const getStockStatus = (stockLevel: number) => {
     if (stockLevel === 0) {
-      return { label: "Out of Stock", color: "bg-red-100 text-red-800" };
+      return { label: "Hết hàng", color: "bg-red-100 text-red-800" };
     } else if (stockLevel <= 10) {
-      return { label: "Low Stock", color: "bg-yellow-100 text-yellow-800" };
+      return { label: "Còn ít", color: "bg-yellow-100 text-yellow-800" };
     }
-    return { label: "In Stock", color: "bg-green-100 text-green-800" };
+    return { label: "Còn hàng", color: "bg-green-100 text-green-800" };
   };
 
   const getProductStatus = (isActive: boolean) => {
     return isActive
-      ? { label: "Active", color: "bg-green-100 text-green-800" }
-      : { label: "Inactive", color: "bg-gray-100 text-gray-800" };
+      ? { label: "Hoạt động", color: "bg-green-100 text-green-800" }
+      : { label: "Ngưng hoạt động", color: "bg-gray-100 text-gray-800" };
   };
+
+  const totalPages = Math.ceil(total / conditions.limit);
+
+  const onSearchDebounce = useCallback(
+    debounce(
+      (search?: string) =>
+        setConditions((prev) => ({ ...prev, search: search || "" })),
+      300
+    ),
+    []
+  );
 
   return (
     <Card className="border border-gray-200">
@@ -106,14 +134,14 @@ export function InventorySync() {
             <div className="text-right">
               <p className="text-sm text-gray-600">Lần cuối cập nhật</p>
               <p className="text-sm font-medium text-gray-900">
-                {lastInventorySync
-                  ? getRelativeTime(new Date(lastInventorySync.syncedAt!))
+                {inventoryData.length > 0
+                  ? getRelativeTime(new Date(inventoryData[0]?.created_at))
                   : "Never"}
               </p>
             </div>
             <Button
               onClick={handleManualSync}
-              disabled={inventorySyncMutation.isPending}
+              disabled={isDisabled}
               className="bg-blue-600 hover:bg-blue-700"
             >
               <RefreshCw
@@ -127,28 +155,15 @@ export function InventorySync() {
             </Button>
           </div>
         </div>
-        {/* 
+
         <div className="mb-6">
-          <label
-            htmlFor="branch-filter"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Filter by Branch
-          </label>
-          <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-            <SelectTrigger className="w-64">
-              <SelectValue placeholder="All Branches" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Branches</SelectItem>
-              {branches.map((branch) => (
-                <SelectItem key={branch.value} value={branch.value}>
-                  {branch.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div> */}
+          <Input
+            className=" w-[300px]"
+            placeholder="Nhập mã hàng, tên hàng"
+            inputMode="text"
+            onChange={(e) => onSearchDebounce(e.target.value)}
+          />
+        </div>
 
         <div className="overflow-x-auto">
           <Table>
@@ -241,7 +256,9 @@ export function InventorySync() {
                           {formatCurrency(item.base_price || 0)}
                         </TableCell>
                         <TableCell>
-                          <Badge className={productStatus.color}>
+                          <Badge
+                            className={cn(productStatus.color, " text-[8px]")}
+                          >
                             {productStatus.label}
                           </Badge>
                         </TableCell>
@@ -252,7 +269,7 @@ export function InventorySync() {
           </Table>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="p-4">
               <div className="flex items-center">
@@ -324,6 +341,60 @@ export function InventorySync() {
               </div>
             </CardContent>
           </Card>
+        </div> */}
+
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-gray-700">
+            <span className="font-medium">
+              {conditions.page * inventoryData.length - inventoryData.length}
+            </span>{" "}
+            đến{" "}
+            <span className="font-medium">
+              {conditions.page * inventoryData.length}
+            </span>{" "}
+            của <span className="font-medium">{total}</span> kết quả
+          </div>
+          <Pagination className="mt-4">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() =>
+                    setConditions((prev) => ({
+                      ...prev,
+                      page: Math.max(prev.page - 1, 1),
+                    }))
+                  }
+                  isActive={conditions.page <= 1}
+                />
+              </PaginationItem>
+              {Array.from({ length: totalPages }).map((_, index) => (
+                <PaginationItem key={index}>
+                  <PaginationLink
+                    isActive={index + 1 === conditions.page}
+                    onClick={() =>
+                      setConditions((prev) => ({
+                        ...prev,
+                        page: index + 1,
+                      }))
+                    }
+                  >
+                    {index + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() =>
+                    setConditions((prev) => ({
+                      ...prev,
+                      page: Math.min(prev.page + 1, totalPages),
+                    }))
+                  }
+                  isActive={conditions.page >= totalPages}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       </CardContent>
     </Card>
