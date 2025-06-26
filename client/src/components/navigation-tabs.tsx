@@ -5,11 +5,14 @@ interface NavigationTabsProps {
   onTabChange: (tab: string) => void;
 }
 
-export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) {
+export function NavigationTabs({
+  activeTab,
+  onTabChange,
+}: NavigationTabsProps) {
   const tabs = [
-    { id: "connection", label: "Connection Settings", icon: Plug },
-    { id: "orders", label: "Order Sync", icon: ShoppingCart },
-    { id: "inventory", label: "Inventory Sync", icon: Package },
+    { id: "connection", label: "Cài đặt kết nối", icon: Plug },
+    { id: "orders", label: "Đồng bộ đơn hàng", icon: ShoppingCart },
+    { id: "inventory", label: "Đồng bộ kho", icon: Package },
   ];
 
   return (
@@ -19,7 +22,7 @@ export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) 
           <button
             key={id}
             onClick={() => onTabChange(id)}
-            className={`tab-button ${activeTab === id ? 'active' : ''}`}
+            className={`tab-button ${activeTab === id ? "active" : ""}`}
           >
             <Icon className="h-4 w-4 mr-2" />
             {label}

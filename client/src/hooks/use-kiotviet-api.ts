@@ -1,10 +1,14 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { mockOrders, mockInventory, mockProducts, mockSyncLogs, getInventoryWithProducts, getInventoryStats } from "@/lib/mock-data";
+import {
+  getInventoryStats,
+  getInventoryWithProducts,
+  mockOrders,
+  mockSyncLogs,
+} from "@/lib/mock-data";
 import { InsertApiCredentials } from "@shared/schema";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Simulate API delays for realistic UX
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function useApiConnection() {
   return useQuery({
@@ -19,79 +23,12 @@ export function useApiConnection() {
   });
 }
 
-export function useTestConnection() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (credentials: InsertApiCredentials) => {
-      await delay(2000);
-      
-      // Simulate connection test
-      if (!credentials.clientId || !credentials.clientSecret) {
-        throw new Error("Client ID and Client Secret are required");
-      }
-      
-      return {
-        success: true,
-        message: "Connection test successful!",
-        testedAt: new Date(),
-      };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/connection/status"] });
-    },
-  });
-}
-
-export function useToggleApiConnection() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (enabled: boolean) => {
-      await delay(500);
-      return { enabled };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/connection/status"] });
-    },
-  });
-}
-
 export function useOrders() {
   return useQuery({
     queryKey: ["/api/orders"],
     queryFn: async () => {
       await delay(1000);
       return mockOrders;
-    },
-  });
-}
-
-export function useOrderSync() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async () => {
-      await delay(3000);
-      return {
-        success: true,
-        recordsCount: 47,
-        syncedAt: new Date(),
-      };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/sync-logs"] });
-    },
-  });
-}
-
-export function useInventory(selectedBranch?: string) {
-  return useQuery({
-    queryKey: ["/api/inventory", selectedBranch],
-    queryFn: async () => {
-      await delay(1000);
-      return getInventoryWithProducts(selectedBranch);
     },
   });
 }
@@ -108,7 +45,7 @@ export function useInventoryStats() {
 
 export function useInventorySync() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async () => {
       await delay(3000);

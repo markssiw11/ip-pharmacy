@@ -65,7 +65,7 @@ export const mockProducts: Product[] = [
   {
     id: 3,
     productId: "PRD-003",
-    name: "MacBook Pro 14\"",
+    name: 'MacBook Pro 14"',
     unit: "Unit",
     price: "55990000",
     isActive: false,
@@ -140,9 +140,12 @@ export const branches = [
 
 export function getInventoryWithProducts(selectedBranch?: string) {
   return mockInventory
-    .filter(inv => !selectedBranch || inv.branch.toLowerCase().includes(selectedBranch))
-    .map(inv => {
-      const product = mockProducts.find(p => p.productId === inv.productId);
+    .filter(
+      (inv) =>
+        !selectedBranch || inv.branch.toLowerCase().includes(selectedBranch)
+    )
+    .map((inv) => {
+      const product = mockProducts.find((p) => p.productId === inv.productId);
       return {
         ...inv,
         product: product!,
@@ -152,9 +155,15 @@ export function getInventoryWithProducts(selectedBranch?: string) {
 
 export function getInventoryStats() {
   const totalProducts = mockProducts.length;
-  const inStockCount = mockInventory.filter(inv => inv.stockLevel > 10).length;
-  const lowStockCount = mockInventory.filter(inv => inv.stockLevel > 0 && inv.stockLevel <= 10).length;
-  const outOfStockCount = mockInventory.filter(inv => inv.stockLevel === 0).length;
+  const inStockCount = mockInventory.filter(
+    (inv) => inv.stockLevel > 10
+  ).length;
+  const lowStockCount = mockInventory.filter(
+    (inv) => inv.stockLevel > 0 && inv.stockLevel <= 10
+  ).length;
+  const outOfStockCount = mockInventory.filter(
+    (inv) => inv.stockLevel === 0
+  ).length;
 
   return {
     totalProducts: 1247,
@@ -165,35 +174,42 @@ export function getInventoryStats() {
 }
 
 export function formatCurrency(amount: string | number): string {
-  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
+  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
     minimumFractionDigits: 0,
-  }).format(numAmount).replace('₫', '₫');
+  })
+    .format(numAmount)
+    .replace("₫", "₫");
 }
 
 export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('vi-VN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+  return new Intl.DateTimeFormat("vi-VN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
   }).format(date);
 }
 
 export function getRelativeTime(date: Date): string {
   const now = new Date();
-  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-  
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes} minutes ago`;
+  const diffInMinutes = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60)
+  );
+  if (diffInMinutes < 1) {
+    return "vừa xong";
   }
-  
+
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} phút trước`;
+  }
+
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
-    return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    return `${diffInHours} giờ trước`;
   }
-  
+
   const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  return `${diffInDays} ngày trước`;
 }
