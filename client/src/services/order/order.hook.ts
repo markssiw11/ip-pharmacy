@@ -30,3 +30,13 @@ export function useOrderSync() {
     },
   });
 }
+
+export function useOrderById(id: string) {
+  return useQuery({
+    queryKey: ["/api/orders", id],
+    queryFn: async () => {
+      return OrderApi.getOrderById(id);
+    },
+    enabled: !!id && id.length > 0,
+  });
+}

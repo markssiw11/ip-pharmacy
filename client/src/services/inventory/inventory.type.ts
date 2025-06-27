@@ -37,10 +37,11 @@ export interface IPosProduct {
 }
 
 export interface IInventoryQueryParams {
-  page?: number;
-  limit?: number;
+  page: number;
+  limit: number;
   status?: number;
   purchase_date?: string;
   end_date?: string;
   search?: string;
+  is_active?: boolean;
 }

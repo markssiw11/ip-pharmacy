@@ -14,7 +14,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatDate, getRelativeTime } from "@/lib/mock-data";
 import { useOrders, useOrderSync } from "@/services/order";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Pagination,
   PaginationContent,
@@ -24,6 +24,9 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 import { useApiConfig } from "@/services/connect";
+import { useLocation, useRouter } from "wouter";
+import debounce from "lodash.debounce";
+import { Input } from "./ui/input";
 
 export function OrderSync() {
   const { toast } = useToast();
@@ -32,11 +35,13 @@ export function OrderSync() {
     limit: 10,
     status: undefined,
     purchase_date: undefined,
+    search: "",
   });
 
   const { data: orders, isLoading: ordersLoading } = useOrders({
     page: conditions?.page,
     limit: conditions?.limit,
+    search: conditions?.search,
   });
   const orderSyncMutation = useOrderSync();
 
@@ -75,6 +80,12 @@ export function OrderSync() {
     }
   };
 
+  const [, navigate] = useLocation();
+
+  const goToOrderDetails = (id: string) => {
+    navigate(`/order/${id}`);
+  };
+
   const isDisabled = useMemo(() => {
     return (
       !config?.connection || orderSyncMutation.isPending || !config?.is_active
@@ -97,6 +108,15 @@ export function OrderSync() {
   };
 
   const totalPages = Math.ceil(ordersCount / conditions.limit);
+
+  const onSearchDebounce = useCallback(
+    debounce(
+      (search?: string) =>
+        setConditions((prev) => ({ ...prev, search: search || "" })),
+      300
+    ),
+    []
+  );
 
   return (
     <Card className="border border-gray-200">
@@ -136,6 +156,15 @@ export function OrderSync() {
           </div>
         </div>
 
+        <div className="mb-6">
+          <Input
+            className=" w-[300px]"
+            placeholder="Nhập mã hàng, tên hàng"
+            inputMode="text"
+            onChange={(e) => onSearchDebounce(e.target.value)}
+          />
+        </div>
+
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -150,7 +179,7 @@ export function OrderSync() {
                   Ngày Mua
                 </TableHead>
                 <TableHead className="font-medium text-gray-500 uppercase text-xs tracking-wider">
-                  Giá Tiền
+                  Doanh Thu
                 </TableHead>
                 <TableHead className="font-medium text-gray-500 uppercase text-xs tracking-wider">
                   Trạng Thái
@@ -185,7 +214,10 @@ export function OrderSync() {
                     </TableRow>
                   ))
                 : orderData?.map((order) => (
-                    <TableRow key={order.id}>
+                    <TableRow
+                      key={order.id}
+                      onClick={() => goToOrderDetails(order?.id)}
+                    >
                       <TableCell className="font-medium text-primary">
                         #{order.code}
                       </TableCell>

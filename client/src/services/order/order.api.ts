@@ -1,5 +1,5 @@
 import request from "../axios";
-import { IOrderQueryParams, IOrderResponse } from "./order.type";
+import { IOrderData, IOrderQueryParams, IOrderResponse } from "./order.type";
 
 const getOrders = async (params: IOrderQueryParams) => {
   const res: { data: IOrderResponse } = await request.get("/orders", {
@@ -14,7 +14,14 @@ const syncOrders = async () => {
   return res?.data || 0;
 };
 
+const getOrderById = async (id: string) => {
+  const res: { data: IOrderData } = await request.get(`/orders/${id}`);
+  console.log("Get Order By ID Response:", res);
+  return res?.data || {};
+};
+
 export const OrderApi = {
   getOrders,
   syncOrders,
+  getOrderById,
 };

@@ -28,7 +28,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useInventoryStats, useSyncLogs } from "@/hooks/use-kiotviet-api";
 import { formatCurrency, getRelativeTime, branches } from "@/lib/mock-data";
-import { useInventory, useInventorySync } from "@/services/inventory";
+import {
+  IInventoryQueryParams,
+  useInventory,
+  useInventorySync,
+} from "@/services/inventory";
 import { cn } from "@/lib/utils";
 import {
   Pagination,
@@ -43,14 +47,21 @@ import debounce from "lodash.debounce";
 import { useApiConfig } from "@/services/connect";
 
 export function InventorySync() {
-  const [conditions, setConditions] = useState({
+  const [conditions, setConditions] = useState<IInventoryQueryParams>({
     page: 1,
     limit: 10,
     status: undefined,
     purchase_date: undefined,
     search: "",
+    is_active: undefined,
   });
   const { toast } = useToast();
+
+  console.log(
+    "conditions=============",
+    conditions?.is_active,
+    typeof conditions?.is_active
+  );
 
   const { data: inventory, isLoading: inventoryLoading } =
     useInventory(conditions);
@@ -156,13 +167,35 @@ export function InventorySync() {
           </div>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 flex items-center space-x-4">
           <Input
             className=" w-[300px]"
             placeholder="Nhập mã hàng, tên hàng"
             inputMode="text"
             onChange={(e) => onSearchDebounce(e.target.value)}
           />
+          <Select
+            value={
+              conditions.is_active === undefined
+                ? "all"
+                : String(conditions.is_active)
+            }
+            onValueChange={(value) => {
+              setConditions((prev) => ({
+                ...prev,
+                is_active: value === "all" ? undefined : value === "true",
+              }));
+            }}
+          >
+            <SelectTrigger className="w-[160px] ml-4">
+              <SelectValue placeholder="Trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả trạng thái</SelectItem>
+              <SelectItem value="true">Hoạt động</SelectItem>
+              <SelectItem value="false">Ngưng hoạt động</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="overflow-x-auto">

@@ -1,7 +1,14 @@
+import { is } from "drizzle-orm";
 import request from "../axios";
 import { IInventoryQueryParams, IPosProduct } from "./inventory.type";
+import { stringToBoolean } from "@/lib/utils";
 
 const getInventories = async (params: IInventoryQueryParams) => {
+  console.log(
+    "typeof params.is_active",
+    typeof params.is_active,
+    typeof stringToBoolean(params.is_active)
+  );
   const res: {
     data: {
       data: IPosProduct[];
