@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 
+// const API_URL = "http://localhost:3000/api";
 const API_URL = "https://pos.api.dev.cxgenie.ai/api";
 
 const request = axios.create({

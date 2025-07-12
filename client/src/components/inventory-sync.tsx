@@ -57,12 +57,6 @@ export function InventorySync() {
   });
   const { toast } = useToast();
 
-  console.log(
-    "conditions=============",
-    conditions?.is_active,
-    typeof conditions?.is_active
-  );
-
   const { data: inventory, isLoading: inventoryLoading } =
     useInventory(conditions);
   const inventorySyncMutation = useInventorySync();
