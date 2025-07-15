@@ -34,7 +34,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const user = useUserStore((state) => state.user);
 
   const login = async (data: ILoginRequest) => {
-    const response = await AuthApi.login(data?.username, data?.password);
+    const response = await AuthApi.login(data?.username.trim(), data?.password);
     useUserStore.setState(() => ({
       user: response,
       isLoading: false,

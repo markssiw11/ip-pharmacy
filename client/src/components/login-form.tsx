@@ -144,7 +144,7 @@ export function LoginForm({}: LoginFormProps) {
               <p className="font-medium mb-2">Tài khoản thử nghiệm:</p>
               <div className="grid grid-cols-1 gap-2 text-xs">
                 <div className="bg-muted p-2 rounded">
-                  <strong>pharmacy@gmail.com</strong> / 12345678 - Admin nhà
+                  <strong>pharmacy@gmail.com</strong> / 012345678 - Admin nhà
                   thuốc
                 </div>
               </div>
