@@ -1,7 +1,5 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useAuth } from "@/components/auth-provider";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,11 +17,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { authenticateUser, MockUser } from "@/lib/mock-auth";
-import { useAuth } from "@/components/auth-provider";
+import { authenticateUser } from "@/lib/mock-auth";
+import { ILoginRequest } from "@/services/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Info } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Tên đăng nhập là bắt buộc"),
@@ -32,11 +33,9 @@ const loginSchema = z.object({
 
 type LoginCredentials = z.infer<typeof loginSchema>;
 
-interface LoginFormProps {
-  onLoginSuccess: (user: MockUser) => void;
-}
+interface LoginFormProps {}
 
-export function LoginForm({ onLoginSuccess }: LoginFormProps) {
+export function LoginForm({}: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login } = useAuth();
@@ -53,18 +52,12 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setIsLoading(true);
 
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      const user = authenticateUser(data.username, data.password);
-
-      if (user) {
+      const res = await login(form.getValues() as ILoginRequest);
+      if (res) {
         toast({
           title: "Đăng nhập thành công",
-          description: `Chào mừng, ${user.fullName}!`,
+          description: `Chào mừng, ${res?.name}!`,
         });
-        login(user);
-        onLoginSuccess(user);
       } else {
         toast({
           title: "Đăng nhập thất bại",
@@ -151,13 +144,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
               <p className="font-medium mb-2">Tài khoản thử nghiệm:</p>
               <div className="grid grid-cols-1 gap-2 text-xs">
                 <div className="bg-muted p-2 rounded">
-                  <strong>admin</strong> / admin123 - Quản trị viên
-                </div>
-                <div className="bg-muted p-2 rounded">
-                  <strong>pharmacist</strong> / duoc123 - Dược sĩ
-                </div>
-                <div className="bg-muted p-2 rounded">
-                  <strong>manager</strong> / quan123 - Quản lý
+                  <strong>pharmacy@gmail.com</strong> / 12345678 - Admin nhà
+                  thuốc
                 </div>
               </div>
             </div>

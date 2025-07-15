@@ -1,4 +1,5 @@
 import request from "../axios";
+import { IImportOrder, IImportOrderCreateRequest } from "./import-order.type";
 import { IOrderData, IOrderQueryParams, IOrderResponse } from "./order.type";
 
 const getOrders = async (params: IOrderQueryParams) => {
@@ -20,8 +21,31 @@ const getOrderById = async (id: string) => {
   return res?.data || {};
 };
 
+const getImportOrders = async (params: IOrderQueryParams) => {
+  const res: IResponse<{ data: IImportOrder[]; total: number }> =
+    await request.get("/import-orders", {
+      params,
+    });
+  return (
+    res?.data || {
+      data: [],
+      total: 0,
+    }
+  );
+};
+
+const importOrder = async (data: IImportOrderCreateRequest) => {
+  const res: { data: IImportOrder } = await request.post(
+    "/import-orders",
+    data
+  );
+  return res?.data;
+};
+
 export const OrderApi = {
   getOrders,
   syncOrders,
   getOrderById,
+  getImportOrders,
+  importOrder,
 };

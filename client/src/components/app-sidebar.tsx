@@ -264,7 +264,7 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
               Phiên bản 1.0.0
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-              © 2024 Pharmacy Portal
+              © 2025 Pharmacy Portal
             </p>
           </div>
         )}

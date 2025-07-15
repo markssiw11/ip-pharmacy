@@ -114,7 +114,7 @@ function AppContent() {
   }
 
   if (!user) {
-    return <LoginForm onLoginSuccess={() => {}} />;
+    return <LoginForm />;
   }
 
   return <AuthenticatedApp />;

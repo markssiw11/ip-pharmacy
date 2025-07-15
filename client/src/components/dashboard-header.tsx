@@ -126,8 +126,8 @@ export function DashboardHeader() {
 
         <div className="flex items-center space-x-4">
           <div className="text-right">
-            <p className="text-sm font-medium">{user.fullName}</p>
-            <p className="text-xs text-muted-foreground">{user.role}</p>
+            <p className="text-sm font-medium">{user.name}</p>
+            <p className="text-xs text-muted-foreground">Admin nhà thuốc</p>
           </div>
 
           <DropdownMenu>
@@ -138,11 +138,11 @@ export function DashboardHeader() {
               >
                 <Avatar className="h-10 w-10">
                   <AvatarFallback>
-                    {user.fullName
+                    {user.name
                       ?.split(" ")
                       .map((n) => n[0])
                       .join("")
-                      .toUpperCase() || user.username.slice(0, 2).toUpperCase()}
+                      .toUpperCase() || user.name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -151,10 +151,10 @@ export function DashboardHeader() {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">
-                    {user.fullName}
+                    {user.name}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    @{user.username}
+                    @{user.name}
                   </p>
                 </div>
               </DropdownMenuLabel>

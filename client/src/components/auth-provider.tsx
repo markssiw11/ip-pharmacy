@@ -1,4 +1,5 @@
-import { MockUser } from "@/lib/mock-auth";
+import { AuthApi, ILogin, ILoginRequest, useUserStore } from "@/services/auth";
+import { removeAuthToken, setAuthToken } from "@/services/auth/auth.helper";
 import {
   createContext,
   useContext,
@@ -8,9 +9,9 @@ import {
 } from "react";
 
 interface AuthContextType {
-  user: MockUser | null;
+  user: ILogin | null;
   isLoading: boolean;
-  login: (user: MockUser) => void;
+  login: (user: ILoginRequest) => Promise<ILogin>;
   logout: () => void;
 }
 
@@ -29,41 +30,26 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<MockUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const logoutStore = useUserStore((state) => state.logout);
+  const user = useUserStore((state) => state.user);
 
-  useEffect(() => {
-    // Check if user is already logged in from localStorage
-    const checkAuth = () => {
-      try {
-        const savedUser = localStorage.getItem("pharmacy_user");
-        if (savedUser) {
-          const userData = JSON.parse(savedUser);
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error("Auth check failed:", error);
-        localStorage.removeItem("pharmacy_user");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  const login = (userData: MockUser) => {
-    setUser(userData);
-    localStorage.setItem("pharmacy_user", JSON.stringify(userData));
+  const login = async (data: ILoginRequest) => {
+    const response = await AuthApi.login(data?.username, data?.password);
+    useUserStore.setState(() => ({
+      user: response,
+      isLoading: false,
+    }));
+    setAuthToken(response.token);
+    return response;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("pharmacy_user");
+  const logout = async () => {
+    logoutStore();
+    removeAuthToken();
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading: false, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
