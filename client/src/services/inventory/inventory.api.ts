@@ -4,17 +4,12 @@ import { IInventoryQueryParams, IPosProduct } from "./inventory.type";
 import { stringToBoolean } from "@/lib/utils";
 
 const getInventories = async (params: IInventoryQueryParams) => {
-  console.log(
-    "typeof params.is_active",
-    typeof params.is_active,
-    typeof stringToBoolean(params.is_active)
-  );
   const res: {
     data: {
       data: IPosProduct[];
       total: number;
     };
-  } = await request.get("/pos-products", {
+  } = await request.get("/products/kiotviet", {
     params,
   });
   return res?.data || [];
