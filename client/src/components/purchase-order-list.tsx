@@ -66,12 +66,14 @@ const statusIcons: Record<string, any> = {
   pending: Package,
   approved: CheckCircle,
   cancelled: XCircle,
+  delivered: CheckCircle,
 };
 
 const mapStatusLabel: Record<string, any> = {
   pending: "Đã tạo",
   approved: "Đã xử lý",
   cancelled: "Huỷ",
+  delivered: "Hoàn tất",
 };
 
 export function PurchaseOrderList() {
@@ -289,7 +291,6 @@ export function PurchaseOrderList() {
             </Table>
           )}
 
-          {/* Pagination Controls */}
           {total > limit && (
             <div className="flex items-center justify-between px-2 py-4">
               <div className="text-sm text-muted-foreground">

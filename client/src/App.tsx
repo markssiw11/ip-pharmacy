@@ -11,6 +11,7 @@ import { PurchaseOrderList } from "@/components/purchase-order-list";
 import { ConnectionSettings } from "@/components/connection-settings";
 import { OrderSync } from "@/components/order-sync";
 import { InventorySync } from "@/components/inventory-sync";
+import SuppliersPage from "./components/suppliers";
 
 function AuthenticatedApp() {
   const [activeTab, setActiveTab] = useState("purchase-orders");
@@ -44,23 +45,7 @@ function AuthenticatedApp() {
           </div>
         );
       case "suppliers":
-        return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                Quản lý nhà cung cấp
-              </h1>
-              <p className="text-muted-foreground">
-                Quản lý thông tin nhà cung cấp và đối tác
-              </p>
-            </div>
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                Tính năng đang được phát triển...
-              </p>
-            </div>
-          </div>
-        );
+        return <SuppliersPage />;
       case "reports":
         return (
           <div className="space-y-6">

@@ -13,6 +13,7 @@ export interface IDistributor {
   created_at: string;
   updated_at: string;
   deleted_at?: string;
+  avatar?: string;
 }
 
 export interface ICreateDistributorRequest {
