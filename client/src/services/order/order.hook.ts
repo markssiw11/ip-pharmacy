@@ -6,7 +6,7 @@ import { toast } from "@/hooks/use-toast";
 
 export const useOrders = (params: IOrderQueryParams) => {
   return useQuery({
-    queryKey: ["/api/orders", params],
+    queryKey: ["orders", params],
     queryFn: async () => {
       return OrderApi.getOrders(params);
     },

@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { authenticateUser } from "@/lib/mock-auth";
+import { queryClient } from "@/lib/queryClient";
 import { ILoginRequest } from "@/services/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Info } from "lucide-react";
@@ -58,6 +59,9 @@ export function LoginForm({}: LoginFormProps) {
           title: "Đăng nhập thành công",
           description: `Chào mừng, ${res?.name}!`,
         });
+        // fetch all data after login
+        queryClient.invalidateQueries({ queryKey: ["import-orders"] });
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
       } else {
         toast({
           title: "Đăng nhập thất bại",

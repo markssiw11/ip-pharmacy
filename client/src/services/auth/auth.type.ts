@@ -35,3 +35,9 @@ export interface ILoginRequest {
   username: string;
   password: string;
 }
+
+export interface IChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}

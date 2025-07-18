@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/components/auth-provider";
 import { changeUserPassword } from "@/lib/mock-auth";
+import { AuthApi } from "@/services";
 
 const changePasswordSchema = z
   .object({
@@ -68,16 +69,13 @@ export function DashboardHeader() {
     setIsChangingPassword(true);
 
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const res = await AuthApi.changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+        confirmPassword: data.confirmPassword,
+      });
 
-      const success = changeUserPassword(
-        user.id,
-        data.currentPassword,
-        data.newPassword
-      );
-
-      if (success) {
+      if (!!res) {
         toast({
           title: "Đổi mật khẩu thành công",
           description: "Mật khẩu của bạn đã được cập nhật",
