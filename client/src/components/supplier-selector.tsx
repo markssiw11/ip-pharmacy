@@ -30,7 +30,6 @@ export function SupplierSelector({
 }: SupplierSelectorProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-
   const { data: suppliers = [], isLoading } = useDistributors({
     limit: 99,
   });
