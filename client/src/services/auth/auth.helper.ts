@@ -1,5 +1,5 @@
 export const LocalKeys = {
-  AUTH_TOKEN: "auth.token",
+  AUTH_TOKEN: "app.auth.token",
 };
 
 export const setAuthToken = (token: string) => {

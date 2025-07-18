@@ -38,7 +38,6 @@ export function ProductSelector({
   const [hasMore, setHasMore] = useState(true);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const limit = 50;
-
   const {
     data: products,
     isLoading,
@@ -58,7 +57,7 @@ export function ProductSelector({
       setAllProducts((prev) => [...prev, ...(productData || [])]);
       setHasMore(productData?.length < (products?.total || 0));
     }
-  }, [products, offset, debouncedSearchTerm, searchTerm]);
+  }, [products, offset, debouncedSearchTerm, searchTerm, supplierId]);
 
   useEffect(() => {
     setOffset(0);

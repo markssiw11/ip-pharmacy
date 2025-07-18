@@ -20,7 +20,7 @@ export const useUserStore = create<IAuthStore>()(
       changePassword: (data: any) => Promise<void>,
     }),
     {
-      name: "user-storage",
+      name: "app-user-storage",
     }
   )
 );
