@@ -17,6 +17,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  EventTracking,
+  setMetadata,
+  trackingEvent,
+  updateProfile,
+} from "@/helpers/tracking";
 import { useToast } from "@/hooks/use-toast";
 import { authenticateUser } from "@/lib/mock-auth";
 import { queryClient } from "@/lib/queryClient";
@@ -62,6 +68,25 @@ export function LoginForm({}: LoginFormProps) {
         // fetch all data after login
         queryClient.invalidateQueries({ queryKey: ["import-orders"] });
         queryClient.invalidateQueries({ queryKey: ["orders"] });
+        console.log("Login successful:", res);
+
+        updateProfile({
+          email: res.email,
+          userId: res.id,
+          name: res.name,
+          phone: res.phone_number,
+        });
+
+        trackingEvent(EventTracking.USER_LOGIN, {
+          email: res.email,
+          userId: res.id,
+          name: res.name,
+          gender: res.gender?.toString(),
+        });
+
+        setMetadata({
+          role: res.staff?.role,
+        });
       } else {
         toast({
           title: "Đăng nhập thất bại",
