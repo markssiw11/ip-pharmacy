@@ -108,20 +108,23 @@ export function LoginForm({}: LoginFormProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
       <div className="w-full max-w-md space-y-6">
+        <div className="text-center">
+          <img
+            className="mx-auto h-12 w-auto"
+            src="/logo.png"
+            alt="IP Pharmacy Logo"
+          />
+          <h2 className="mt-6 text-3xl font-bold text-gray-900">IP Pharmacy</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Hệ thống quản lý nhà thuốc
+          </p>
+        </div>
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-primary">
-              Hệ thống quản lý nhà thuốc
-            </CardTitle>
-            <CardDescription>
-              Đăng nhập để truy cập hệ thống quản lý đơn hàng
-            </CardDescription>
-          </CardHeader>
           <CardContent>
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
+                className="space-y-4 mt-4"
               >
                 <FormField
                   control={form.control}

@@ -95,16 +95,14 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
       <div className="border-b border-gray-200 dark:border-gray-800 px-3 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 relative">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-600 rounded-lg">
-              <Package className="h-5 w-5 text-white" />
-            </div>
+            <img src="/logo.png" alt="Logo" className="h-8 w-8 object-cover" />
             {!isCollapsed && (
               <div>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                  Nhà thuốc Portal
+                  IB Pharmacy
                 </h2>
                 <p className="text-xs text-gray-600 dark:text-gray-300">
-                  Hệ thống quản lý
+                  Seller Portal
                 </p>
               </div>
             )}

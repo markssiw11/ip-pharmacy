@@ -202,9 +202,7 @@ export function InventorySync() {
                 <TableHead className="font-medium text-gray-500 uppercase text-xs tracking-wider">
                   Tên Sản Phẩm
                 </TableHead>
-                <TableHead className="font-medium text-gray-500 uppercase text-xs tracking-wider">
-                  Chi nhánh
-                </TableHead>
+
                 <TableHead className="font-medium text-gray-500 uppercase text-xs tracking-wider">
                   Nhóm hàng
                 </TableHead>
@@ -247,8 +245,9 @@ export function InventorySync() {
                     </TableRow>
                   ))
                 : inventoryData?.map((item) => {
-                    const inventory = (item.inventories || [])[0];
-                    const stockLevel = inventory?.on_hand || 0;
+                    const inventory = (item.productInventories || [])[0];
+                    const stockLevel =
+                      item?.inventory_summary?.total_on_hand || 0;
 
                     const stockStatus = getStockStatus(stockLevel);
                     const productStatus = getProductStatus(
@@ -264,9 +263,6 @@ export function InventorySync() {
                           {item.name}
                         </TableCell>
                         <TableCell className="text-gray-500">
-                          {inventory?.branch_name}
-                        </TableCell>
-                        <TableCell className="text-gray-500">
                           {item?.category_name}
                         </TableCell>
                         <TableCell className="text-gray-900">
@@ -280,7 +276,7 @@ export function InventorySync() {
                           </div>
                         </TableCell>
                         <TableCell className="text-gray-900">
-                          {formatCurrency(item.base_price || 0)}
+                          {formatCurrency(item.inventory_summary?.cost || 0)}
                         </TableCell>
                         <TableCell>
                           <Badge

@@ -22,9 +22,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useImportOrders } from "@/services/order";
+import { useImportOrders, useSyncOrderToKiotViet } from "@/services/order";
 import type {
   Product,
   PurchaseOrder,
@@ -38,6 +44,7 @@ import {
   ChevronRight,
   Package,
   Plus,
+  RefreshCw,
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
@@ -84,6 +91,7 @@ export function PurchaseOrderList() {
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const syncOrderMutation = useSyncOrderToKiotViet();
 
   const limit = 10;
   const offset = (currentPage - 1) * limit || 0;
@@ -157,6 +165,10 @@ export function PurchaseOrderList() {
     setCurrentPage(page);
   };
 
+  const handleSyncToKiotViet = (orderId: string) => {
+    syncOrderMutation.mutate(orderId);
+  };
+
   const formatCurrency = (amount: number | string) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -220,7 +232,7 @@ export function PurchaseOrderList() {
                   <TableHead>Ngày giao</TableHead>
                   <TableHead>Tổng tiền</TableHead>
                   <TableHead>Trạng thái</TableHead>
-                  {/* <TableHead>Thao tác</TableHead> */}
+                  <TableHead>Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -249,41 +261,34 @@ export function PurchaseOrderList() {
                           {mapStatusLabel[order.status]}
                         </Badge>
                       </TableCell>
-                      {/* <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedOrder(order)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          {order.status === "Đã tạo" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleStatusChange(order.id, "Đang xử lý")
-                              }
-                              disabled={updateStatusMutation.isPending}
-                            >
-                              Xử lý
-                            </Button>
-                          )}
-                          {order.status === "Đang xử lý" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleStatusChange(order.id, "Hoàn thành")
-                              }
-                              disabled={updateStatusMutation.isPending}
-                            >
-                              Hoàn thành
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell> */}
+                      <TableCell>
+                        {order.status === "delivered" && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleSyncToKiotViet(order.id)}
+                                  disabled={syncOrderMutation.isPending}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <RefreshCw
+                                    className={`h-4 w-4 ${
+                                      syncOrderMutation.isPending
+                                        ? "animate-spin"
+                                        : ""
+                                    }`}
+                                  />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Đồng bộ đơn hàng lên KiotViet</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
