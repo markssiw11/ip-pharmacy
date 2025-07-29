@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ConnectApi } from "./connect.api";
 import { IConnectSettingsForm } from "./connect.type";
+import { toast } from "@/hooks/use-toast";
 
 export const useApiConfig = () => {
   return useQuery({
@@ -13,7 +14,7 @@ export const useApiConfig = () => {
   });
 };
 
-export function useTestConnection() {
+export function useCheckConnection() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -44,6 +45,47 @@ export function useToggleApiConnection() {
       return { enabled };
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/connection/config"] });
+    },
+  });
+}
+
+export function useUpdateApiConfig() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (config: IConnectSettingsForm) => {
+      const res = await ConnectApi.updateConnect(config);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/connection/config"] });
+    },
+  });
+}
+
+export function useTestConnection() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (credentials: IConnectSettingsForm) => {
+      const res = await ConnectApi.testConnection(credentials);
+      if (!res.data) {
+        throw new Error(
+          "Connection test failed. Please check your credentials."
+        );
+      }
+      return {
+        success: true,
+        message: "Connection test successful!",
+        testedAt: new Date(),
+      };
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Connection test successful!",
+      });
       queryClient.invalidateQueries({ queryKey: ["/connection/config"] });
     },
   });

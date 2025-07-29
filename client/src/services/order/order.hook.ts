@@ -73,3 +73,28 @@ export function mutateImportOrder({
     },
   });
 }
+
+export function useSyncOrderToKiotViet() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderId: string) => {
+      return OrderApi.syncOrderToKiotViet(orderId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["import-orders"] });
+      toast({
+        title: "Đồng bộ thành công",
+        description: "Đơn hàng đã được đồng bộ thành công lên KiotViet",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Lỗi khi đồng bộ",
+        description:
+          error.message || "Đã xảy ra lỗi khi đồng bộ đơn hàng lên KiotViet",
+        variant: "destructive",
+      });
+    },
+  });
+}

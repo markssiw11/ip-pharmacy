@@ -42,10 +42,19 @@ const importOrder = async (data: IImportOrderCreateRequest) => {
   return res?.data;
 };
 
+const syncOrderToKiotViet = async (orderId: string) => {
+  const res: { data: any } = await request.post(
+    `/import-orders/${orderId}/sync-to-kiotviet`
+  );
+  console.log("Sync Order to KiotViet Response:", res);
+  return res?.data || {};
+};
+
 export const OrderApi = {
   getOrders,
   syncOrders,
   getOrderById,
   getImportOrders,
   importOrder,
+  syncOrderToKiotViet,
 };

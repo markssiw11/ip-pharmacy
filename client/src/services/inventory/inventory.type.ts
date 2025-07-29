@@ -30,10 +30,17 @@ export interface IPosProduct {
   base_price: number;
   conversion_value: number;
   is_active: boolean;
-  inventories: IInventory[];
+  productInventories: IInventory[];
   created_at: string; // ISO date string
   updated_at: string; // ISO date string
   deleted_at: string | null; // ISO date string or null
+  inventory_summary: {
+    total_on_hand: number;
+    total_reserved: number;
+    total_available: number;
+    warehouses_count: number;
+    cost: number;
+  };
 }
 
 export interface IInventoryQueryParams {
