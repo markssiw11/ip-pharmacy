@@ -59,6 +59,10 @@ export function useUpdateApiConfig() {
       return res.data;
     },
     onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Connection settings updated successfully!",
+      });
       queryClient.invalidateQueries({ queryKey: ["/connection/config"] });
     },
   });

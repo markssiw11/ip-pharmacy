@@ -30,8 +30,18 @@ request.interceptors.response.use(
   <T>(response: AxiosResponse<T>) => {
     return response.data;
   },
-  (error: Error) => {
-    return Promise.reject(new Error(error.message));
+  (error: any) => {
+    // Preserve the original axios error structure to access response data
+    if (error.response) {
+      // Server responded with error status
+      return Promise.reject(error);
+    } else if (error.request) {
+      // Request was made but no response received
+      return Promise.reject(new Error("Không thể kết nối đến server"));
+    } else {
+      // Something else happened
+      return Promise.reject(new Error(error.message));
+    }
   }
 );
 export default request;

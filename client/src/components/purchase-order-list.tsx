@@ -262,7 +262,8 @@ export function PurchaseOrderList() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {order.status === "delivered" && (
+                        {order.status === "delivered" &&
+                        !order?.is_synced_to_kiotviet ? (
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -287,6 +288,8 @@ export function PurchaseOrderList() {
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
+                        ) : (
+                          <div>Đã đồng bộ</div>
                         )}
                       </TableCell>
                     </TableRow>

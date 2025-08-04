@@ -64,6 +64,12 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
           description: "Quản lý tồn kho từ KiotViet",
         },
         {
+          id: "branch-sync",
+          title: "Đồng bộ chi nhánh",
+          icon: Package,
+          description: "Quản lý danh sách chi nhánh KiotViet",
+        },
+        {
           id: "sync-logs",
           title: "Nhật ký đồng bộ",
           icon: FileText,

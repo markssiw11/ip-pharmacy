@@ -15,6 +15,8 @@ export interface IImportOrder {
   distributor: Distributor;
   createdBy: CreatedBy;
   items: Item[];
+  is_synced_to_kiotviet: boolean;
+  synced_at: any;
 }
 
 export interface Distributor {

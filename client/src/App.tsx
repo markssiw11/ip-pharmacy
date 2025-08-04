@@ -11,6 +11,7 @@ import { PurchaseOrderList } from "@/components/purchase-order-list";
 import { ConnectionSettings } from "@/components/connection-settings";
 import { OrderSync } from "@/components/order-sync";
 import { InventorySync } from "@/components/inventory-sync";
+import { BranchSync } from "@/components/branch-sync";
 import SuppliersPage from "./components/suppliers";
 
 declare global {
@@ -37,6 +38,8 @@ function AuthenticatedApp() {
         return <OrderSync />;
       case "inventory-sync":
         return <InventorySync />;
+      case "branch-sync":
+        return <BranchSync />;
       case "sync-logs":
         return (
           <div className="space-y-6">
@@ -97,7 +100,6 @@ function AuthenticatedApp() {
 
 function AppContent() {
   const { user, isLoading } = useAuth();
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
