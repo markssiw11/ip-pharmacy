@@ -2,7 +2,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { OrderApi } from "./order.api";
 import { IOrderQueryParams } from "./order.type";
 import { IImportOrderCreateRequest } from "./import-order.type";
-import { toast } from "@/hooks/use-toast";
+import {
+  createMutationErrorHandler,
+  createMutationSuccessHandler,
+  showSuccessToast,
+  showErrorToast,
+} from "../api-utils";
 
 export const useOrders = (params: IOrderQueryParams) => {
   return useQuery({
@@ -27,7 +32,7 @@ export function useOrderSync() {
       };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
   });
 }
@@ -65,11 +70,7 @@ export function mutateImportOrder({
       onSuccess?.();
     },
     onError: (error: any) => {
-      toast({
-        title: "Lỗi khi cập nhật trạng thái",
-        description: error.message || "Đã xảy ra lỗi không mong muốn",
-        variant: "destructive",
-      });
+      showErrorToast(error, "Lỗi khi cập nhật trạng thái");
     },
   });
 }
@@ -83,18 +84,13 @@ export function useSyncOrderToKiotViet() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["import-orders"] });
-      toast({
-        title: "Đồng bộ thành công",
-        description: "Đơn hàng đã được đồng bộ thành công lên KiotViet",
-      });
+      showSuccessToast(
+        "Đồng bộ thành công",
+        "Đơn hàng đã được đồng bộ thành công lên KiotViet"
+      );
     },
     onError: (error: any) => {
-      toast({
-        title: "Lỗi khi đồng bộ",
-        description:
-          error.message || "Đã xảy ra lỗi khi đồng bộ đơn hàng lên KiotViet",
-        variant: "destructive",
-      });
+      showErrorToast(error, "Lỗi khi đồng bộ");
     },
   });
 }

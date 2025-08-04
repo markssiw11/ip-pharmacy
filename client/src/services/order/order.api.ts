@@ -43,11 +43,17 @@ const importOrder = async (data: IImportOrderCreateRequest) => {
 };
 
 const syncOrderToKiotViet = async (orderId: string) => {
-  const res: { data: any } = await request.post(
-    `/import-orders/${orderId}/sync-to-kiotviet`
-  );
-  console.log("Sync Order to KiotViet Response:", res);
-  return res?.data || {};
+  try {
+    const res: { data: any } = await request.post(
+      `/import-orders/${orderId}/sync-to-kiotviet`
+    );
+    console.log("Sync Order to KiotViet Response:", res);
+    return res?.data || {};
+  } catch (error: any) {
+    console.error("API Error syncing order to KiotViet:", error);
+    // Re-throw the error to be handled by the hook
+    throw error;
+  }
 };
 
 export const OrderApi = {
