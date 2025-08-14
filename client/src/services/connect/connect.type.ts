@@ -16,7 +16,7 @@ export interface IConnectSettingsForm {
   client_id?: string;
   secret_id?: string;
   is_active?: boolean;
-  user_name?: string;
+  username?: string;
   password?: string;
-  connection_type: "api" | "user_password";
+  connection_type?: "api" | "user_password";
 }

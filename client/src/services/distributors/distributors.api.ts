@@ -53,7 +53,14 @@ const deleteDistributor = async (id: number) => {
 
 const toggleDistributorStatus = async (id: number) => {
   const res: IResponse<IDistributor> = await request.patch(
-    `v1/distributors/${id}/toggle-status`
+    `v1/distributors/${id}/status`
+  );
+  return res.data;
+};
+
+const syncToKiotviet = async (id: string) => {
+  const res: IResponse<IDistributor> = await request.post(
+    `v1/distributors/sync-to-kiotviet/${id}`
   );
   return res.data;
 };
@@ -65,4 +72,5 @@ export const DistributorsApi = {
   updateDistributor,
   deleteDistributor,
   toggleDistributorStatus,
+  syncToKiotviet,
 };
