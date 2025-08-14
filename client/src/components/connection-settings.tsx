@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
   useApiConfig,
+  useConnectToKiotViet,
   useTestConnection,
   useToggleApiConnection,
   useUpdateApiConfig,
@@ -45,6 +46,7 @@ export function ConnectionSettings() {
   const { toast } = useToast();
 
   const testConnectionMutation = useTestConnection();
+  const connectMutation = useConnectToKiotViet();
   const toggleApiMutation = useToggleApiConnection();
   const { data: config, refetch } = useApiConfig();
   const { mutate: updateConfig, isPending } = useUpdateApiConfig();
@@ -137,7 +139,7 @@ export function ConnectionSettings() {
       }
       try {
         await testConnectionMutation.mutateAsync({
-          user_name: values.user_name,
+          username: values.user_name,
           password: values.password,
           connection_type: "user_password",
           store_name: values.connectionName,
@@ -183,12 +185,10 @@ export function ConnectionSettings() {
         });
         return;
       }
-      updateConfig({
+      connectMutation.mutate({
         store_name: values.connectionName,
-        user_name: values.user_name,
+        username: values.user_name,
         password: values.password,
-        is_active: connectionEnabled,
-        connection_type: "user_password",
       });
     }
     refetch();

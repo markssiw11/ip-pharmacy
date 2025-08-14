@@ -1,25 +1,30 @@
-import { useQuery } from "@tanstack/react-query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
-  Phone,
-  Mail,
-  MapPin,
-  User,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  useDistributors,
+  useSyncDistributorToKiotviet,
+} from "@/services/distributors/distributors.hook";
+import { useState, useEffect, useCallback } from "react";
+import {
   Building,
   CheckCircle,
+  Mail,
+  MapPin,
+  Phone,
+  RefreshCw,
+  User,
   XCircle,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import type { Supplier } from "@shared/schema";
-import { useDistributors } from "@/services";
+import { useApiConfig } from "@/services";
 
 const statusColors = {
   ACTIVE: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
@@ -36,8 +41,116 @@ const statusLabels = {
   INACTIVE: "Tạm dừng",
 };
 
+const canSync = (syncedAt?: string) => {
+  if (!syncedAt) return true;
+  const lastSync = new Date(syncedAt).getTime();
+  const now = new Date().getTime();
+  return now - lastSync > 30000; // 30 seconds in milliseconds
+};
+
+interface SyncState {
+  [key: string]: {
+    endTime: number; // Timestamp when countdown will end
+    remaining: number; // Remaining seconds (for display)
+  };
+}
+
 export default function SuppliersPage() {
   const { data: suppliers = [], isLoading } = useDistributors();
+  const { data: config } = useApiConfig();
+  const { mutate: syncToKiotviet, isPending: isSyncing } =
+    useSyncDistributorToKiotviet();
+  const [syncStates, setSyncStates] = useState<SyncState>({});
+
+  // Initialize sync states and start countdown timers on mount
+  useEffect(() => {
+    const now = Date.now();
+    const initialStates: SyncState = {};
+
+    // Initialize from server data
+    suppliers.forEach((supplier) => {
+      if (supplier.synced_at) {
+        const lastSync = new Date(supplier.synced_at).getTime();
+        const remainingMs = Math.max(0, lastSync + 30000 - now);
+        if (remainingMs > 0) {
+          initialStates[supplier.id] = {
+            endTime: lastSync + 30000,
+            remaining: Math.ceil(remainingMs / 1000),
+          };
+        }
+      }
+    });
+
+    setSyncStates(initialStates);
+
+    // Start a single interval to update all active countdowns
+    const interval = setInterval(() => {
+      setSyncStates((current) => {
+        const now = Date.now();
+        const newState = { ...current };
+        let hasChanges = false;
+
+        Object.keys(current).forEach((supplierId) => {
+          const state = current[supplierId];
+          const remaining = Math.max(
+            0,
+            Math.ceil((state.endTime - now) / 1000)
+          );
+
+          if (remaining <= 0) {
+            delete newState[supplierId];
+            hasChanges = true;
+          } else if (remaining !== state.remaining) {
+            newState[supplierId] = {
+              ...state,
+              remaining,
+            };
+            hasChanges = true;
+          }
+        });
+
+        return hasChanges ? newState : current;
+      });
+    }, 100); // Check more frequently for smoother updates
+
+    return () => clearInterval(interval);
+  }, [suppliers]);
+
+  // Start or update countdown for a supplier
+  const startCountdown = useCallback((supplierId: string) => {
+    const endTime = Date.now() + 30000; // 30 seconds from now
+
+    setSyncStates((prev) => ({
+      ...prev,
+      [supplierId]: {
+        endTime,
+        remaining: 30,
+      },
+    }));
+  }, []);
+
+  // Check if a supplier is in cooldown
+  const isInCooldown = useCallback(
+    (supplierId: string) => {
+      return syncStates[supplierId]?.remaining > 0;
+    },
+    [syncStates]
+  );
+
+  // Handle sync button click
+  const handleSyncClick = useCallback(
+    (e: React.MouseEvent, supplierId: string) => {
+      e.stopPropagation();
+      if (!isInCooldown(supplierId) && !!config?.store_name) {
+        syncToKiotviet({
+          id: supplierId,
+          retailerName: config?.store_name,
+        });
+        startCountdown(supplierId);
+      }
+    },
+    [syncToKiotviet, startCountdown, isInCooldown, config?.store_name]
+  );
 
   if (isLoading) {
     return (
@@ -106,13 +219,56 @@ export default function SuppliersPage() {
                       <CardTitle className="text-lg">{supplier.name}</CardTitle>
                     </div>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={`text-xs ${statusColor} w-[120px]`}
-                  >
-                    <StatusIcon className="w-3 h-3 mr-1" />
-                    {statusLabel}
-                  </Badge>
+                  <div className="flex items-center space-x-2">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs shrink-0 w-fit h-7 flex items-center gap-1 ${statusColor}`}
+                    >
+                      <StatusIcon className="w-3 h-3" />
+                      {statusLabel}
+                    </Badge>
+                    <TooltipProvider>
+                      <Tooltip delayDuration={150}>
+                        <TooltipTrigger asChild>
+                          <div className="relative">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 w-7 p-0"
+                              disabled={
+                                !canSync(supplier.synced_at) ||
+                                isSyncing ||
+                                isInCooldown(supplier.id.toString())
+                              }
+                              onClick={(e) =>
+                                handleSyncClick(e, supplier.id.toString())
+                              }
+                            >
+                              <RefreshCw className="w-3 h-3" />
+                              <span className="sr-only">Đồng bộ</span>
+                            </Button>
+                            {!canSync(supplier.synced_at) &&
+                              supplier.synced_at && (
+                                <div className="absolute inset-0 bg-black/20 rounded-md" />
+                              )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {isInCooldown(supplier.id.toString()) ? (
+                            <p>
+                              Đồng bộ lại sau:{" "}
+                              {syncStates[supplier.id]?.remaining || 0}s
+                            </p>
+                          ) : !canSync(supplier.synced_at) &&
+                            supplier.synced_at ? (
+                            <p>Vui lòng đợi 30 giây trước khi đồng bộ lại</p>
+                          ) : (
+                            <p>Đồng bộ</p>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
