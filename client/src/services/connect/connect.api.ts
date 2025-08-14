@@ -18,9 +18,9 @@ const testConnection = async (payload: IConnectSettingsForm) => {
   const res: { data: IConnectSettings } = await request.post(
     "/kiotviet2/test-connection",
     {
-      username: "0393604620",
-      password: "dxq9uy736Y5WP@r",
-      store_name: "thanhpharmacy",
+      username: payload.username,
+      password: payload.password,
+      store_name: payload.store_name,
     }
   );
   return res;
