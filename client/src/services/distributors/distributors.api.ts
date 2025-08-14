@@ -60,7 +60,11 @@ const toggleDistributorStatus = async (id: number) => {
 
 const syncToKiotviet = async (id: string) => {
   const res: IResponse<IDistributor> = await request.post(
-    `v1/distributors/sync-to-kiotviet/${id}`
+    `v1/distributors/sync-to-kiotviet/${id}`,
+    undefined,
+    {
+      withCredentials: true,
+    }
   );
   return res.data;
 };
