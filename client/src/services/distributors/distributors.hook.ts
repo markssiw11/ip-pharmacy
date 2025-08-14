@@ -109,6 +109,39 @@ export const useDeleteDistributor = () => {
   });
 };
 
+export const useSyncDistributorToKiotviet = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (id: string) => DistributorsApi.syncToKiotviet(id),
+    onSuccess: (data) => {
+      // Invalidate and refetch the distributors list and the specific distributor
+      queryClient.invalidateQueries({ queryKey: distributorsKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: distributorsKeys.detail(Number(data.id)),
+      });
+
+      toast({
+        title: "Thành công",
+        description: "Đồng bộ nhà cung cấp lên KiotViet thành công",
+      });
+
+      return data;
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Lỗi",
+        description:
+          error.response?.data?.message ||
+          "Có lỗi xảy ra khi đồng bộ lên KiotViet",
+        variant: "destructive",
+      });
+      throw error;
+    },
+  });
+};
+
 export const useToggleDistributorStatus = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();

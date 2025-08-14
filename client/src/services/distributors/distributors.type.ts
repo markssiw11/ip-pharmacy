@@ -4,6 +4,8 @@ export interface IDistributor {
   email: string;
   phone: string;
   address: string;
+  is_synced: boolean;
+  external_id?: string;
   tax_code?: string;
   contact_person?: string;
   contact_phone?: string;
@@ -12,6 +14,7 @@ export interface IDistributor {
   description?: string;
   created_at: string;
   updated_at: string;
+  synced_at?: string;
   deleted_at?: string;
   avatar?: string;
 }

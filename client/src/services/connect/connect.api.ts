@@ -7,33 +7,26 @@ const getConnect = async () => {
 };
 
 const checkConnect = async (payload: IConnectSettingsForm) => {
-  const res: { data: IConnectSettings } = await request.post(
-    "/pos-settings",
-    payload
-  );
+  const res: { data: IConnectSettings } = await request.post("/pos-settings", payload);
   return res;
 };
 
 const testConnection = async (payload: IConnectSettingsForm) => {
-  const res: { data: IConnectSettings } = await request.post(
-    "/pos-settings/test-connection",
-    payload
-  );
+  const res: { data: IConnectSettings } = await request.post("/kiotviet2/test-connection", {
+    username: "0393604620",
+    password: "dxq9uy736Y5WP@r",
+    store_name: "thanhpharmacy",
+  });
   return res;
 };
 
 const updateIsActive = async (is_active: boolean) => {
-  const res: { data: IConnectSettings } = await request.put(
-    `/pos-settings/is-active/${is_active}`
-  );
+  const res: { data: IConnectSettings } = await request.put(`/pos-settings/is-active/${is_active}`);
   return res;
 };
 
 const updateConnect = async (payload: IConnectSettingsForm) => {
-  const res: { data: IConnectSettings } = await request.post(
-    "/pos-settings",
-    payload
-  );
+  const res: { data: IConnectSettings } = await request.post("/pos-settings", payload);
   return res;
 };
 
