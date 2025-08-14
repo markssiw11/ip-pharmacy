@@ -1,11 +1,24 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { useApiConfig, useTestConnection, useToggleApiConnection, useUpdateApiConfig } from "@/services/connect";
+import {
+  useApiConfig,
+  useConnectToKiotViet,
+  useTestConnection,
+  useToggleApiConnection,
+  useUpdateApiConfig,
+} from "@/services/connect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertApiCredentialsSchema } from "@shared/schema";
 import { CheckCircle, Wifi, User, Key } from "lucide-react";
@@ -26,11 +39,14 @@ const userCredentialsSchema = z.object({
 });
 
 export function ConnectionSettings() {
-  const [connectionType, setConnectionType] = useState<"api" | "user_password">("api");
+  const [connectionType, setConnectionType] = useState<"api" | "user_password">(
+    "api"
+  );
   const [connectionEnabled, setConnectionEnabled] = useState(false);
   const { toast } = useToast();
 
   const testConnectionMutation = useTestConnection();
+  const connectMutation = useConnectToKiotViet();
   const toggleApiMutation = useToggleApiConnection();
   const { data: config, refetch } = useApiConfig();
   const { mutate: updateConfig, isPending } = useUpdateApiConfig();
@@ -104,7 +120,10 @@ export function ConnectionSettings() {
       } catch (error) {
         toast({
           title: "Connection Failed",
-          description: error instanceof Error ? error.message : "Failed to connect to KiotViet API",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to connect to KiotViet API",
           variant: "destructive",
         });
       }
@@ -128,7 +147,10 @@ export function ConnectionSettings() {
       } catch (error) {
         toast({
           title: "Connection Failed",
-          description: error instanceof Error ? error.message : "Failed to connect to KiotViet API",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to connect to KiotViet API",
           variant: "destructive",
         });
       }
@@ -163,12 +185,10 @@ export function ConnectionSettings() {
         });
         return;
       }
-      updateConfig({
+      connectMutation.mutate({
         store_name: values.connectionName,
         username: values.user_name,
         password: values.password,
-        is_active: connectionEnabled,
-        connection_type: "user_password",
       });
     }
     refetch();
@@ -182,7 +202,9 @@ export function ConnectionSettings() {
         await toggleApiMutation.mutateAsync(enabled);
         toast({
           title: enabled ? "API Enabled" : "API Disabled",
-          description: `KiotViet API connection ${enabled ? "enabled" : "disabled"}`,
+          description: `KiotViet API connection ${
+            enabled ? "enabled" : "disabled"
+          }`,
         });
       } catch (error) {
         toast({
@@ -231,7 +253,9 @@ export function ConnectionSettings() {
     <Card className="border border-gray-200">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Cài đặt kết nối</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Cài đặt kết nối
+          </h2>
           <div className="flex items-center space-x-3">
             <Label className="text-sm text-gray-600">Loại kết nối</Label>
             <Button
@@ -242,7 +266,8 @@ export function ConnectionSettings() {
                 connectionType === "api"
                   ? "bg-blue-50 border-blue-500 text-blue-700"
                   : "bg-green-50 border-green-500 text-green-700"
-              }`}>
+              }`}
+            >
               {connectionType === "api" ? (
                 <>
                   <Key className="h-4 w-4" />
@@ -261,7 +286,9 @@ export function ConnectionSettings() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-lg font-medium text-gray-900">
-              {connectionType === "api" ? "Kết nối API" : "Kết nối bằng tài khoản"}
+              {connectionType === "api"
+                ? "Kết nối API"
+                : "Kết nối bằng tài khoản"}
             </h3>
             <p className="text-sm text-gray-600 mt-1">
               {connectionType === "api"
@@ -276,17 +303,18 @@ export function ConnectionSettings() {
               onCheckedChange={handleToggleConnection}
               disabled={toggleApiMutation.isPending}
             />
-            {connectionEnabled && <div className="w-3 h-3 bg-green-500 rounded-full" />}
+            {connectionEnabled && (
+              <div className="w-3 h-3 bg-green-500 rounded-full" />
+            )}
           </div>
         </div>
 
         {connectionType === "api" ? (
-          <Form
-            {...apiForm}
-            key="api-form">
+          <Form {...apiForm} key="api-form">
             <form
               autoComplete="off"
-              className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+            >
               <FormField
                 control={apiForm.control}
                 name="clientId"
@@ -301,7 +329,9 @@ export function ConnectionSettings() {
                         placeholder="Enter your Client ID"
                       />
                     </FormControl>
-                    {fieldState.error && <FormMessage>{fieldState.error.message}</FormMessage>}
+                    {fieldState.error && (
+                      <FormMessage>{fieldState.error.message}</FormMessage>
+                    )}
                   </FormItem>
                 )}
               />
@@ -348,30 +378,37 @@ export function ConnectionSettings() {
                 <Button
                   type="button"
                   onClick={handleTestConnection}
-                  disabled={!connectionEnabled || testConnectionMutation.isPending}
+                  disabled={
+                    !connectionEnabled || testConnectionMutation.isPending
+                  }
                   variant="outline"
-                  className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                >
                   <Wifi className="h-4 w-4 mr-2" />
                   Test kết nối
                 </Button>
                 <Button
                   type="button"
                   onClick={handleConnect}
-                  disabled={!connectionEnabled || testConnectionMutation.isPending}
-                  className="bg-blue-600 hover:bg-blue-700">
+                  disabled={
+                    !connectionEnabled || testConnectionMutation.isPending
+                  }
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
                   <Key className="h-4 w-4 mr-2" />
-                  {testConnectionMutation.isPending ? "Đang kết nối..." : "Kết nối"}
+                  {testConnectionMutation.isPending
+                    ? "Đang kết nối..."
+                    : "Kết nối"}
                 </Button>
               </div>
             </form>
           </Form>
         ) : (
-          <Form
-            {...userForm}
-            key="user-form">
+          <Form {...userForm} key="user-form">
             <form
               autoComplete="off"
-              className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+            >
               <FormField
                 control={userForm.control}
                 name="user_name"
@@ -432,7 +469,8 @@ export function ConnectionSettings() {
                   onClick={handleTestConnection}
                   disabled={!connectionEnabled}
                   variant="outline"
-                  className="border-green-600 text-green-600 hover:bg-green-50">
+                  className="border-green-600 text-green-600 hover:bg-green-50"
+                >
                   <Wifi className="h-4 w-4 mr-2" />
                   Test kết nối
                 </Button>
@@ -440,7 +478,8 @@ export function ConnectionSettings() {
                   type="button"
                   onClick={handleConnect}
                   disabled={!connectionEnabled || isPending}
-                  className="bg-green-600 hover:bg-green-700">
+                  className="bg-green-600 hover:bg-green-700"
+                >
                   <User className="h-4 w-4 mr-2" />
                   Kết nối
                 </Button>
@@ -449,27 +488,38 @@ export function ConnectionSettings() {
           </Form>
         )}
 
-        {connectionEnabled && connectionType === "api" && config?.connection && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
-            <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-              <div>
-                <h3 className="text-sm font-medium text-green-800">Kết nối thành công với KiotViet API</h3>
-                <p className="text-sm text-green-700 mt-1">
-                  Lần cuối vào: {config.last_sync ? new Date(config.last_sync).toLocaleString() : "Never"}
-                </p>
+        {connectionEnabled &&
+          connectionType === "api" &&
+          config?.connection && (
+            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
+              <div className="flex items-center">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+                <div>
+                  <h3 className="text-sm font-medium text-green-800">
+                    Kết nối thành công với KiotViet API
+                  </h3>
+                  <p className="text-sm text-green-700 mt-1">
+                    Lần cuối vào:{" "}
+                    {config.last_sync
+                      ? new Date(config.last_sync).toLocaleString()
+                      : "Never"}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
         {connectionEnabled && connectionType === "user_password" && (
           <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
             <div className="flex items-center">
               <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
               <div>
-                <h3 className="text-sm font-medium text-green-800">User connection is enabled</h3>
-                <p className="text-sm text-green-700 mt-1">Ready to connect with user credentials</p>
+                <h3 className="text-sm font-medium text-green-800">
+                  User connection is enabled
+                </h3>
+                <p className="text-sm text-green-700 mt-1">
+                  Ready to connect with user credentials
+                </p>
               </div>
             </div>
           </div>

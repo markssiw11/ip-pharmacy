@@ -94,3 +94,30 @@ export function useTestConnection() {
     },
   });
 }
+
+export function useConnectToKiotViet() {
+  return useMutation({
+    mutationFn: async (credentials: IConnectSettingsForm) => {
+      const data = await ConnectApi.connectToKiotViet(credentials);
+      if (!data.success) {
+        throw new Error("Failed to connect to KiotViet");
+      }
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Connected to KiotViet successfully",
+        variant: "default",
+      });
+    },
+
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to connect to KiotViet",
+        variant: "destructive",
+      });
+    },
+  });
+}
