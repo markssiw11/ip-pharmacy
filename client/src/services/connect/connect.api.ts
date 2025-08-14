@@ -16,8 +16,12 @@ const checkConnect = async (payload: IConnectSettingsForm) => {
 
 const testConnection = async (payload: IConnectSettingsForm) => {
   const res: { data: IConnectSettings } = await request.post(
-    "/pos-settings/test-connection",
-    payload
+    "/kiotviet2/test-connection",
+    {
+      username: payload.username,
+      password: payload.password,
+      store_name: payload.store_name,
+    }
   );
   return res;
 };
@@ -37,10 +41,18 @@ const updateConnect = async (payload: IConnectSettingsForm) => {
   return res;
 };
 
+const connectToKiotViet = async (payload: IConnectSettingsForm) => {
+  const res = await request.post("/kiotviet2/connect-to-kiotviet", payload, {
+    withCredentials: true,
+  });
+  return res.data;
+};
+
 export const ConnectApi = {
   getConnect,
   checkConnect,
   updateIsActive,
   updateConnect,
   testConnection,
+  connectToKiotViet,
 };
