@@ -24,6 +24,7 @@ import {
   User,
   XCircle,
 } from "lucide-react";
+import { useApiConfig } from "@/services";
 
 const statusColors = {
   ACTIVE: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
@@ -56,6 +57,7 @@ interface SyncState {
 
 export default function SuppliersPage() {
   const { data: suppliers = [], isLoading } = useDistributors();
+  const { data: config } = useApiConfig();
   const { mutate: syncToKiotviet, isPending: isSyncing } =
     useSyncDistributorToKiotviet();
   const [syncStates, setSyncStates] = useState<SyncState>({});
@@ -139,12 +141,15 @@ export default function SuppliersPage() {
   const handleSyncClick = useCallback(
     (e: React.MouseEvent, supplierId: string) => {
       e.stopPropagation();
-      if (!isInCooldown(supplierId)) {
-        syncToKiotviet(supplierId);
+      if (!isInCooldown(supplierId) && !!config?.store_name) {
+        syncToKiotviet({
+          id: supplierId,
+          retailerName: config?.store_name,
+        });
         startCountdown(supplierId);
       }
     },
-    [syncToKiotviet, startCountdown, isInCooldown]
+    [syncToKiotviet, startCountdown, isInCooldown, config?.store_name]
   );
 
   if (isLoading) {

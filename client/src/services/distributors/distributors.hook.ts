@@ -114,7 +114,8 @@ export const useSyncDistributorToKiotviet = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (id: string) => DistributorsApi.syncToKiotviet(id),
+    mutationFn: ({ id, retailerName }: { id: string; retailerName: string }) =>
+      DistributorsApi.syncToKiotviet(id, retailerName),
     onSuccess: (data) => {
       // Invalidate and refetch the distributors list and the specific distributor
       queryClient.invalidateQueries({ queryKey: distributorsKeys.all });
