@@ -1,4 +1,3 @@
-import { encryptField } from "@/helpers/utils";
 import request from "../axios";
 import {
   IConnectSettings,
@@ -11,28 +10,16 @@ const getConnect = async () => {
   return res;
 };
 
-const generateEncryptedPayload = async () => {
-  const res = await request.get<{ key: string }>("/aes-key");
-
-  return res.data.key;
-};
-
 const createConnection = async (payload: IConnectSettingsForm) => {
-  const key = await generateEncryptedPayload();
-
-  if (!key) {
-    throw new Error("Failed to generate encrypted payload");
-  }
-
   const { store_name, username, password, ...rest } = payload;
 
   const res: { data: IConnectSettingsResponse } = await request.post(
     "/pos-settings",
     {
       ...rest,
-      username: encryptField(username, key),
-      password: encryptField(password, key),
-      store_name: encryptField(store_name, key),
+      username,
+      password,
+      store_name,
     }
   );
 
@@ -54,23 +41,11 @@ const testConnection = async ({
   let payload: Partial<IConnectSettingsForm> = {};
 
   //  Prepare payload
-  const key = await generateEncryptedPayload();
-
-  if (!key) {
-    throw new Error("Failed to generate encrypted payload");
-  }
-
   payload = {
     id,
-    username: config?.username
-      ? encryptField(config?.username, key)
-      : undefined,
-    password: config?.password
-      ? encryptField(config?.password, key)
-      : undefined,
-    store_name: config?.store_name
-      ? encryptField(config?.store_name, key)
-      : undefined,
+    username: config?.username ? config?.username : undefined,
+    password: config?.password ? config?.password : undefined,
+    store_name: config?.store_name ? config?.store_name : undefined,
   };
 
   const res: { data: IConnectSettings } = await request.post(
@@ -96,24 +71,12 @@ const updateConnection = async (
   id: string,
   payload: Partial<IConnectSettingsForm>
 ) => {
-  const key = await generateEncryptedPayload();
-
-  if (!key) {
-    throw new Error("Failed to generate encrypted payload");
-  }
-
   const res: { data: IConnectSettingsResponse } = await request.put(
     `/pos-settings/${id}`,
     {
-      username: payload?.username
-        ? encryptField(payload?.username, key)
-        : undefined,
-      password: payload?.password
-        ? encryptField(payload?.password, key)
-        : undefined,
-      store_name: payload?.store_name
-        ? encryptField(payload?.store_name, key)
-        : undefined,
+      username: payload?.username ? payload?.username : undefined,
+      password: payload?.password ? payload?.password : undefined,
+      store_name: payload?.store_name ? payload?.store_name : undefined,
     }
   );
   return res.data;
@@ -139,7 +102,6 @@ const connectToKiotViet = async (id: string) => {
 
 export const ConnectApi = {
   getConnect,
-  generateEncryptedPayload,
   createConnection,
   updateIsActive,
   updateConnection,

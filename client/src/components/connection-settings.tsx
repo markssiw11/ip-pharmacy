@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
@@ -13,16 +12,16 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
+  IConnectSettingsForm,
   useApiConfig,
-  useCreateConnection,
   useConnectToKiotViet,
+  useCreateConnection,
   useTestConnection,
   useToggleApiConnection,
   useUpdateConnection,
-  IConnectSettingsForm,
 } from "@/services/connect";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle, User, Wifi, Edit } from "lucide-react";
+import { CheckCircle, Edit, User, Wifi } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -98,16 +97,14 @@ export function ConnectionSettings() {
 
   useEffect(() => {
     setConnectionEnabled(config?.is_active || false);
-    if (config?.is_active) {
-      setConnectionType(config?.connection_type || "user_password");
-      if (!!config?.id) {
-        userForm.reset({
-          id: config?.id || "",
-          user_name: config?.username || "",
-          password: config?.password || "",
-          connection_name: config?.store_name || "",
-        });
-      }
+    setConnectionType(config?.connection_type || "user_password");
+    if (!!config?.id) {
+      userForm.reset({
+        id: config?.id || "",
+        user_name: config?.username || "",
+        password: config?.password || "",
+        connection_name: config?.store_name || "",
+      });
     }
   }, [config, setConnectionEnabled, setConnectionType, userForm]);
 
