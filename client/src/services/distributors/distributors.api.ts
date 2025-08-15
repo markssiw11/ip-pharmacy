@@ -58,12 +58,10 @@ const toggleDistributorStatus = async (id: number) => {
   return res.data;
 };
 
-const syncToKiotviet = async (id: string, retailerName: string) => {
+const syncToKiotviet = async (id: string) => {
   const res: IResponse<IDistributor> = await request.post(
     `v1/distributors/sync-to-kiotviet/${id}`,
-    {
-      retailer: retailerName,
-    },
+    {},
     {
       withCredentials: true,
     }
