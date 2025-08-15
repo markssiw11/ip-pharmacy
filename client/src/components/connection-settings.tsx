@@ -520,7 +520,7 @@ export function ConnectionSettings() {
               <Button
                 type="button"
                 onClick={handleTestConnection}
-                disabled={!isDirty || (!connectionEnabled && !!config?.id)}
+                disabled={!connectionEnabled && !!config?.id}
                 variant="outline"
                 className="border-green-600 text-green-600 hover:bg-green-50"
               >
@@ -531,7 +531,6 @@ export function ConnectionSettings() {
                 type="button"
                 onClick={handleConnect}
                 disabled={
-                  !isDirty ||
                   (!connectionEnabled && !!config?.id) ||
                   updateConnectionPending
                 }
