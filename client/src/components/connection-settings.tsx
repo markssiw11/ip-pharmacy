@@ -14,240 +14,302 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
   useApiConfig,
+  useCreateConnection,
   useConnectToKiotViet,
   useTestConnection,
   useToggleApiConnection,
-  useUpdateApiConfig,
+  useUpdateConnection,
 } from "@/services/connect";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertApiCredentialsSchema } from "@shared/schema";
-import { CheckCircle, Wifi, User, Key } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { CheckCircle, User, Wifi, Edit } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const credentialsSchema = insertApiCredentialsSchema.extend({
-  clientId: z.string().min(1, "Vui lòng nhập Client ID"),
-  clientSecret: z.string().min(1, "Vui lòng nhập Client Secret"),
-  storeName: z.string().min(1, "Vui lòng nhập tên cửa hàng"),
-});
+// const credentialsSchema = insertApiCredentialsSchema.extend({
+//   clientId: z.string().min(1, "Vui lòng nhập Client ID"),
+//   clientSecret: z.string().min(1, "Vui lòng nhập Client Secret"),
+//   storeName: z.string().min(1, "Vui lòng nhập tên cửa hàng"),
+// });
 
-const userCredentialsSchema = z.object({
+const accountConnectionSchema = z.object({
+  id: z.string().optional(),
   user_name: z.string().min(1, "Vui lòng nhập tên đăng nhập"),
   password: z.string().min(1, "Vui lòng nhập mật khẩu"),
-  connectionName: z.string().min(1, "Vui lòng nhập tên kết nối"),
+  connection_name: z.string().min(1, "Vui lòng nhập tên kết nối"),
 });
 
 export function ConnectionSettings() {
   const [connectionType, setConnectionType] = useState<"api" | "user_password">(
-    "api"
+    "user_password"
   );
   const [connectionEnabled, setConnectionEnabled] = useState(false);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [originalValues, setOriginalValues] = useState<Record<string, string>>(
+    {}
+  );
+  const userNameInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const connectionNameInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const testConnectionMutation = useTestConnection();
-  const connectMutation = useConnectToKiotViet();
-  const toggleApiMutation = useToggleApiConnection();
   const { data: config, refetch } = useApiConfig();
-  const { mutate: updateConfig, isPending } = useUpdateApiConfig();
+  const { mutateAsync: testConnection } = useTestConnection();
+  const { mutateAsync: connectToKiotViet } = useConnectToKiotViet();
+  const {
+    mutateAsync: createConnection,
+    isSuccess: createConnectionSuccess,
+    isPending: createConnectionPending,
+  } = useCreateConnection();
+  const {
+    mutateAsync: updateConnection,
+    isSuccess: updateConnectionSuccess,
+    isPending: updateConnectionPending,
+  } = useUpdateConnection();
 
-  console.log("config===================", config);
+  const toggleApiMutation = useToggleApiConnection();
 
-  const apiForm = useForm<z.infer<typeof credentialsSchema>>({
-    resolver: zodResolver(credentialsSchema),
+  const userForm = useForm<z.infer<typeof accountConnectionSchema>>({
+    resolver: zodResolver(accountConnectionSchema),
     defaultValues: {
-      clientId: config?.client_id || "",
-      clientSecret: config?.secret_id || "",
-      isEnabled: config?.is_active || false,
-      storeName: config?.store_name || "",
-    },
-    mode: "onBlur",
-  });
-
-  const userForm = useForm<z.infer<typeof userCredentialsSchema>>({
-    resolver: zodResolver(userCredentialsSchema),
-    defaultValues: {
+      id: "",
       user_name: "",
       password: "",
-      connectionName: "",
+      connection_name: "",
     },
     mode: "onBlur",
   });
 
+  const {
+    formState: { isDirty },
+  } = userForm;
+
+  // const apiForm = useForm<z.infer<typeof credentialsSchema>>({
+  //   resolver: zodResolver(credentialsSchema),
+  //   defaultValues: {
+  //     clientId: config?.client_id || "",
+  //     clientSecret: config?.secret_id || "",
+  //     isEnabled: config?.is_active || false,
+  //     storeName: config?.store_name || "",
+  //   },
+  //   mode: "onBlur",
+  // });
+
   useEffect(() => {
-    if (config) {
-      setConnectionEnabled(config.is_active || false);
-      if (config.is_active) {
-        setConnectionType(config?.connection_type || "user_password");
-        if (config.connection_type === "user_password") {
-          userForm.reset({
-            user_name: config?.user_name || "",
-            password: config?.password || "",
-            connectionName: config.store_name || "",
-          });
-        } else {
-          apiForm.reset({
-            clientId: config.client_id || "",
-            clientSecret: config.secret_id || "",
-            storeName: config.store_name || "",
-            isEnabled: config.is_active || false,
-          });
-        }
+    setConnectionEnabled(config?.is_active || false);
+    if (config?.is_active) {
+      setConnectionType(config?.connection_type || "user_password");
+      if (!!config?.id) {
+        userForm.reset({
+          id: config?.id || "",
+          user_name: config?.username || "",
+          password: config?.password || "",
+          connection_name: config?.store_name || "",
+        });
       }
     }
-  }, [config, apiForm]);
+  }, [config, setConnectionEnabled, setConnectionType, userForm]);
+
+  useEffect(() => {
+    if (
+      createConnectionPending ||
+      updateConnectionPending ||
+      !config?.is_active
+    ) {
+      return;
+    }
+
+    if ((createConnectionSuccess || updateConnectionSuccess) && !!config?.id) {
+      connectToKiotViet({
+        id: config?.id,
+      });
+    }
+  }, [
+    createConnectionSuccess,
+    updateConnectionSuccess,
+    config,
+    connectToKiotViet,
+  ]);
 
   const handleTestConnection = async () => {
-    if (connectionType === "api") {
-      const values = apiForm.getValues();
-      if (!values.clientId || !values.clientSecret || !values.storeName) {
-        apiForm.setError("root", {
-          type: "manual",
-          message: "Vui lòng điền đầy đủ thông tin kết nối",
-        });
-        return;
-      }
-
-      try {
-        await testConnectionMutation.mutateAsync({
-          client_id: values.clientId,
-          secret_id: values.clientSecret,
-          store_name: values.storeName,
-          is_active: connectionEnabled,
-          connection_type: "api",
-        });
-        refetch();
-      } catch (error) {
-        toast({
-          title: "Connection Failed",
-          description:
-            error instanceof Error
-              ? error.message
-              : "Failed to connect to KiotViet API",
-          variant: "destructive",
-        });
-      }
-    } else {
-      // User connection test
-      const values = userForm.getValues();
-      if (!values.user_name || !values.password || !values.connectionName) {
-        userForm.setError("root", {
-          type: "manual",
-          message: "Vui lòng điền đầy đủ thông tin kết nối",
-        });
-        return;
-      }
-      try {
-        await testConnectionMutation.mutateAsync({
-          username: values.user_name,
-          password: values.password,
-          connection_type: "user_password",
-          store_name: values.connectionName,
-        });
-      } catch (error) {
-        toast({
-          title: "Connection Failed",
-          description:
-            error instanceof Error
-              ? error.message
-              : "Failed to connect to KiotViet API",
-          variant: "destructive",
-        });
-      }
+    const values = userForm.getValues();
+    if (!values.user_name || !values.password || !values.connection_name) {
+      userForm.setError("root", {
+        type: "manual",
+        message: "Vui lòng điền đầy đủ thông tin kết nối",
+      });
+      return;
     }
+
+    if (!isDirty && values.id) {
+      try {
+        await testConnection({
+          id: values.id,
+        });
+      } catch (error) {
+        toast({
+          title: "Connection Failed",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Failed to connect to KiotViet API",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
+    try {
+      await testConnection({
+        id: values.id,
+        config: {
+          username:
+            values.user_name !== config?.username
+              ? values.user_name
+              : undefined,
+          password:
+            values.password !== config?.password ? values.password : undefined,
+          connection_type: "user_password",
+          store_name:
+            values.connection_name !== config?.store_name
+              ? values.connection_name
+              : undefined,
+        },
+      });
+    } catch (error) {
+      toast({
+        title: "Connection Failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to connect to KiotViet API",
+        variant: "destructive",
+      });
+    }
+
+    // if (connectionType === "api") {
+    //   const values = apiForm.getValues();
+    //   if (!values.clientId || !values.clientSecret || !values.storeName) {
+    //     apiForm.setError("root", {
+    //       type: "manual",
+    //       message: "Vui lòng điền đầy đủ thông tin kết nối",
+    //     });
+    //     return;
+    //   }
+
+    //   try {
+    //     await testConnectionMutation.mutateAsync({
+    //       client_id: values.clientId,
+    //       secret_id: values.clientSecret,
+    //       store_name: values.storeName,
+    //       is_active: connectionEnabled,
+    //       connection_type: "api",
+    //     });
+    //     refetch();
+    //   } catch (error) {
+    //     toast({
+    //       title: "Connection Failed",
+    //       description:
+    //         error instanceof Error
+    //           ? error.message
+    //           : "Failed to connect to KiotViet API",
+    //       variant: "destructive",
+    //     });
+    //   }
+    // }
   };
 
   const handleConnect = async () => {
-    if (connectionType === "api") {
-      const values = apiForm.getValues();
-      if (!values.clientId || !values.clientSecret || !values.storeName) {
-        apiForm.setError("root", {
-          type: "manual",
-          message: "Vui lòng điền đầy đủ thông tin kết nối",
-        });
-        return;
-      }
-      updateConfig({
-        store_name: values.storeName,
-        is_active: connectionEnabled,
-        client_id: values.clientId,
-        secret_id: values.clientSecret,
-        connection_type: "api",
-      });
-    } else {
-      // User connection logic
-      const values = userForm.getValues();
+    const values = userForm.getValues();
 
-      if (!values.user_name || !values.password || !values.connectionName) {
-        userForm.setError("root", {
-          type: "manual",
-          message: "Vui lòng điền đầy đủ thông tin kết nối",
-        });
-        return;
-      }
-      connectMutation.mutate({
-        store_name: values.connectionName,
+    if (!values.user_name || !values.password || !values.connection_name) {
+      userForm.setError("root", {
+        type: "manual",
+        message: "Vui lòng điền đầy đủ thông tin kết nối",
+      });
+      return;
+    }
+
+    if (!values.id) {
+      await createConnection({
+        store_name: values.connection_name,
         username: values.user_name,
         password: values.password,
+        connection_type: "user_password",
+      });
+    } else {
+      await updateConnection({
+        id: values.id,
+        config: {
+          username:
+            values.user_name !== config?.username
+              ? values.user_name
+              : undefined,
+          password:
+            values.password !== config?.password ? values.password : undefined,
+          connection_type: "user_password",
+          store_name:
+            values.connection_name !== config?.store_name
+              ? values.connection_name
+              : undefined,
+        },
       });
     }
-    refetch();
+
+    // if (connectionType === "api") {
+    //   const values = apiForm.getValues();
+    //   if (!values.clientId || !values.clientSecret || !values.storeName) {
+    //     apiForm.setError("root", {
+    //       type: "manual",
+    //       message: "Vui lòng điền đầy đủ thông tin kết nối",
+    //     });
+    //     return;
+    //   }
+    //   updateConfig({
+    //     store_name: values.storeName,
+    //     is_active: connectionEnabled,
+    //     client_id: values.clientId,
+    //     secret_id: values.clientSecret,
+    //     connection_type: "api",
+    //   });
+    // }
+  };
+
+  const handleStartEditing = (fieldName: string, currentValue: string) => {
+    setOriginalValues((prev) => ({ ...prev, [fieldName]: currentValue }));
+    userForm.setValue(fieldName as any, "");
+    setEditingField(fieldName);
+
+    // Focus the input field after a small delay to ensure it's rendered
+    setTimeout(() => {
+      if (fieldName === "user_name" && userNameInputRef.current) {
+        userNameInputRef.current.focus();
+      } else if (fieldName === "password" && passwordInputRef.current) {
+        passwordInputRef.current.focus();
+      } else if (
+        fieldName === "connection_name" &&
+        connectionNameInputRef.current
+      ) {
+        connectionNameInputRef.current.focus();
+      }
+    }, 0);
+  };
+
+  const handleEndEditing = (fieldName: string) => {
+    const currentValue = userForm.getValues(fieldName as any);
+    const originalValue = originalValues[fieldName] || "";
+
+    if (currentValue === "" && originalValue) {
+      // If field is empty, restore original value
+      userForm.setValue(fieldName as any, originalValue);
+    }
+    setEditingField(null);
   };
 
   const handleToggleConnection = async (enabled: boolean) => {
     setConnectionEnabled(enabled);
-
-    if (connectionType === "api") {
-      try {
-        await toggleApiMutation.mutateAsync(enabled);
-        toast({
-          title: enabled ? "API Enabled" : "API Disabled",
-          description: `KiotViet API connection ${
-            enabled ? "enabled" : "disabled"
-          }`,
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to update API connection status",
-          variant: "destructive",
-        });
-      }
-    } else {
-      // User connection toggle logic
-      toast({
-        title: enabled ? "User Connection Enabled" : "User Connection Disabled",
-        description: `User connection ${enabled ? "enabled" : "disabled"}`,
-      });
-    }
+    await toggleApiMutation.mutateAsync({ id: config?.id || "", enabled });
   };
-
-  const switchConnectionType = useCallback(() => {
-    const newType = connectionType === "api" ? "user_password" : "api";
-    console.log("Switching to:", newType);
-    setConnectionType(newType);
-    setConnectionEnabled(false); // Reset connection when switching types
-
-    // Reset the appropriate form when switching
-    if (newType === "user_password") {
-      console.log("Resetting user form");
-      userForm.reset({
-        user_name: "",
-        password: "",
-        connectionName: "",
-      });
-      console.log("User form values after reset:", userForm.getValues());
-    } else {
-      console.log("Resetting API form");
-      apiForm.reset({
-        clientId: "",
-        clientSecret: "",
-        storeName: "",
-        isEnabled: false,
-      });
-      console.log("API form values after reset:", apiForm.getValues());
-    }
-  }, [connectionType, userForm, apiForm]);
 
   return (
     <Card className="border border-gray-200">
@@ -261,24 +323,14 @@ export function ConnectionSettings() {
             <Button
               variant="outline"
               size="sm"
-              onClick={switchConnectionType}
               className={`flex items-center gap-2 ${
                 connectionType === "api"
                   ? "bg-blue-50 border-blue-500 text-blue-700"
                   : "bg-green-50 border-green-500 text-green-700"
               }`}
             >
-              {connectionType === "api" ? (
-                <>
-                  <Key className="h-4 w-4" />
-                  API
-                </>
-              ) : (
-                <>
-                  <User className="h-4 w-4" />
-                  User
-                </>
-              )}
+              <User className="h-4 w-4" />
+              User
             </Button>
           </div>
         </div>
@@ -309,7 +361,187 @@ export function ConnectionSettings() {
           </div>
         </div>
 
-        {connectionType === "api" ? (
+        <Form {...userForm} key="user-form">
+          <form
+            autoComplete="off"
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            <FormField
+              control={userForm.control}
+              name="user_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tên đăng nhập</FormLabel>
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      ref={userNameInputRef}
+                      autoComplete="off"
+                      placeholder="Nhập tên đăng nhập"
+                      disabled={
+                        !connectionEnabled ||
+                        (!!field.value && editingField !== "user_name")
+                      }
+                      className={
+                        !connectionEnabled ||
+                        (!!field.value && editingField !== "user_name")
+                          ? "pr-10"
+                          : ""
+                      }
+                      onBlur={() => handleEndEditing("user_name")}
+                    />
+                    {connectionEnabled &&
+                      field.value &&
+                      editingField !== "user_name" && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() =>
+                            handleStartEditing("user_name", field.value)
+                          }
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={userForm.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mật khẩu</FormLabel>
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      ref={passwordInputRef}
+                      type={editingField === "password" ? "text" : "password"}
+                      autoComplete="off"
+                      placeholder="Nhập mật khẩu"
+                      disabled={
+                        !connectionEnabled ||
+                        (!!field.value && editingField !== "password")
+                      }
+                      className={
+                        !connectionEnabled ||
+                        (!!field.value && editingField !== "password")
+                          ? "pr-10"
+                          : ""
+                      }
+                      onBlur={() => handleEndEditing("password")}
+                    />
+                    {connectionEnabled &&
+                      field.value &&
+                      editingField !== "password" && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() =>
+                            handleStartEditing("password", field.value)
+                          }
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={userForm.control}
+              name="connection_name"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Tên kết nối</FormLabel>
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      ref={connectionNameInputRef}
+                      placeholder="Nhập tên cho kết nối này"
+                      disabled={
+                        !connectionEnabled ||
+                        (!!field.value && editingField !== "connection_name")
+                      }
+                      className={
+                        field.value && editingField !== "connection_name"
+                          ? "pr-10"
+                          : ""
+                      }
+                      onBlur={() => handleEndEditing("connection_name")}
+                    />
+                    {connectionEnabled &&
+                      field.value &&
+                      editingField !== "connection_name" && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() =>
+                            handleStartEditing("connection_name", field.value)
+                          }
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="md:col-span-2 flex gap-3">
+              <Button
+                type="button"
+                onClick={handleTestConnection}
+                disabled={!connectionEnabled}
+                variant="outline"
+                className="border-green-600 text-green-600 hover:bg-green-50"
+              >
+                <Wifi className="h-4 w-4 mr-2" />
+                Test kết nối
+              </Button>
+              <Button
+                type="button"
+                onClick={handleConnect}
+                disabled={!connectionEnabled || updateConnectionPending}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Kết nối
+              </Button>
+            </div>
+          </form>
+        </Form>
+
+        {connectionEnabled && connectionType === "user_password" && (
+          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
+            <div className="flex items-center">
+              <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
+              <div>
+                <h3 className="text-sm font-medium text-green-800">
+                  User connection is enabled
+                </h3>
+                <p className="text-sm text-green-700 mt-1">
+                  Ready to connect with user credentials
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* API Connection For Next Version */}
+        {/* {connectionType === "api" ? (
           <Form {...apiForm} key="api-form">
             <form
               autoComplete="off"
@@ -403,92 +635,9 @@ export function ConnectionSettings() {
               </div>
             </form>
           </Form>
-        ) : (
-          <Form {...userForm} key="user-form">
-            <form
-              autoComplete="off"
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
-            >
-              <FormField
-                control={userForm.control}
-                name="user_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tên đăng nhập</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        autoComplete="off"
-                        placeholder="Nhập tên đăng nhập"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        ) : null} */}
 
-              <FormField
-                control={userForm.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mật khẩu</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="password"
-                        autoComplete="off"
-                        placeholder="Nhập mật khẩu"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={userForm.control}
-                name="connectionName"
-                render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel>Tên kết nối</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Nhập tên cho kết nối này"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="md:col-span-2 flex gap-3">
-                <Button
-                  type="button"
-                  onClick={handleTestConnection}
-                  disabled={!connectionEnabled}
-                  variant="outline"
-                  className="border-green-600 text-green-600 hover:bg-green-50"
-                >
-                  <Wifi className="h-4 w-4 mr-2" />
-                  Test kết nối
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleConnect}
-                  disabled={!connectionEnabled || isPending}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  Kết nối
-                </Button>
-              </div>
-            </form>
-          </Form>
-        )}
-
-        {connectionEnabled &&
+        {/* {connectionEnabled &&
           connectionType === "api" &&
           config?.connection && (
             <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
@@ -507,23 +656,7 @@ export function ConnectionSettings() {
                 </div>
               </div>
             </div>
-          )}
-
-        {connectionEnabled && connectionType === "user_password" && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
-            <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-              <div>
-                <h3 className="text-sm font-medium text-green-800">
-                  User connection is enabled
-                </h3>
-                <p className="text-sm text-green-700 mt-1">
-                  Ready to connect with user credentials
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+          )} */}
       </CardContent>
     </Card>
   );

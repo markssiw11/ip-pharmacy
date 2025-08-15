@@ -12,6 +12,7 @@ export interface IConnectSettings {
 }
 
 export interface IConnectSettingsForm {
+  id?: string;
   store_name: string;
   client_id?: string;
   secret_id?: string;
@@ -19,4 +20,15 @@ export interface IConnectSettingsForm {
   username?: string;
   password?: string;
   connection_type?: "api" | "user_password";
+}
+
+export interface IConnectSettingsResponse {
+  message: string;
+  settings: {
+    id: string;
+    username: string;
+    password: string;
+    store_name: string;
+    is_active: boolean;
+  };
 }

@@ -11,27 +11,41 @@ export const useApiConfig = () => {
       return res.data;
     },
     retry: 3,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 };
 
-export function useCheckConnection() {
+export function useCreateConnection() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (credentials: IConnectSettingsForm) => {
-      const res = await ConnectApi.checkConnect(credentials);
-      console.log("Connection test response:", res.data);
-      if (!res.data.connection) {
-        throw new Error("Connection failed. Please check your credentials.");
-      }
-      return {
-        success: true,
-        message: "Connection test successful!",
-        testedAt: new Date(),
-      };
+      const res = await ConnectApi.createConnection(credentials);
+      return res.settings;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["connection/status"] });
+    },
+  });
+}
+
+export function useUpdateConnection() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      config,
+    }: {
+      id: string;
+      config: Partial<IConnectSettingsForm>;
+    }) => {
+      const res = await ConnectApi.updateConnection(id, config);
+      return res.settings;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/connection/config"] });
     },
   });
 }
@@ -40,30 +54,25 @@ export function useToggleApiConnection() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (enabled: boolean) => {
-      const res = await ConnectApi.updateIsActive(enabled);
-      return { enabled };
+    mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
+      const res = await ConnectApi.updateIsActive(id, enabled);
+      return res.settings;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/connection/config"] });
-    },
-  });
-}
-
-export function useUpdateApiConfig() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (config: IConnectSettingsForm) => {
-      const res = await ConnectApi.updateConnect(config);
-      return res.data;
-    },
-    onSuccess: () => {
+    onSuccess: ({ is_active }) => {
       toast({
-        title: "Success",
-        description: "Connection settings updated successfully!",
+        title: is_active ? "Connection Enabled" : "Connection Disabled",
+        description: `KiotViet API connection ${
+          is_active ? "enabled" : "disabled"
+        }`,
       });
       queryClient.invalidateQueries({ queryKey: ["/connection/config"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update API connection status",
+        variant: "destructive",
+      });
     },
   });
 }
@@ -72,8 +81,17 @@ export function useTestConnection() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (credentials: IConnectSettingsForm) => {
-      const res = await ConnectApi.testConnection(credentials);
+    mutationFn: async ({
+      id,
+      config,
+    }: {
+      id?: string;
+      config?: Partial<IConnectSettingsForm>;
+    }) => {
+      const res = await ConnectApi.testConnection({
+        id,
+        config,
+      });
       if (!res.data) {
         throw new Error(
           "Connection test failed. Please check your credentials."
@@ -97,21 +115,18 @@ export function useTestConnection() {
 
 export function useConnectToKiotViet() {
   return useMutation({
-    mutationFn: async (credentials: IConnectSettingsForm) => {
-      const data = await ConnectApi.connectToKiotViet(credentials);
-      if (!data.success) {
-        throw new Error("Failed to connect to KiotViet");
-      }
+    mutationFn: async ({ id }: { id: string }) => {
+      const data = await ConnectApi.connectToKiotViet(id);
+
       return data;
     },
-    onSuccess: () => {
+    onSuccess: ({ success, message }) => {
       toast({
-        title: "Success",
-        description: "Connected to KiotViet successfully",
-        variant: "default",
+        title: success ? "Success" : "Error",
+        description: success ? "Connected to KiotViet successfully" : message,
+        variant: success ? "default" : "destructive",
       });
     },
-
     onError: (error: Error) => {
       toast({
         title: "Error",
