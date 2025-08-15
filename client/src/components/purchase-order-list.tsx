@@ -1,6 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -30,7 +37,11 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useImportOrders, useSyncOrderToKiotViet } from "@/services/order";
+import {
+  IImportOrder,
+  useImportOrders,
+  useSyncOrderToKiotViet,
+} from "@/services/order";
 import type {
   Product,
   PurchaseOrder,
@@ -46,6 +57,10 @@ import {
   Plus,
   RefreshCw,
   XCircle,
+  Building,
+  CalendarDays,
+  Truck,
+  FileText,
 } from "lucide-react";
 import { useState } from "react";
 import { PurchaseOrderFormImproved } from "./purchase-order-form-improved";
@@ -85,9 +100,7 @@ const mapStatusLabel: Record<string, any> = {
 
 export function PurchaseOrderList() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<
-    PurchaseOrderWithSupplier | undefined
-  >(undefined);
+  const [selectedOrder, setSelectedOrder] = useState<IImportOrder | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -239,7 +252,11 @@ export function PurchaseOrderList() {
                 {orders.map((order) => {
                   const StatusIcon = statusIcons[order.status || "pending"];
                   return (
-                    <TableRow key={order.id}>
+                    <TableRow
+                      key={order.id}
+                      onClick={() => setSelectedOrder(order)}
+                      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
                       <TableCell className="font-medium">
                         #{order.order_number}
                       </TableCell>
@@ -350,101 +367,137 @@ export function PurchaseOrderList() {
         </CardContent>
       </Card>
 
-      {/* Order Detail Dialog */}
-      <Dialog
+      {/* Order Details Drawer */}
+      <Drawer
         open={!!selectedOrder}
-        onOpenChange={() => setSelectedOrder(undefined)}
+        onOpenChange={(open) => !open && setSelectedOrder(null)}
+        direction="right"
       >
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Chi tiết đơn hàng #{selectedOrder?.id}</DialogTitle>
-          </DialogHeader>
-          {selectedOrder && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold">Thông tin đơn hàng</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Nhà cung cấp: {selectedOrder.supplier?.name || "N/A"}
-                  </p>
-                  {selectedOrder.createdAt && (
-                    <p className="text-sm text-muted-foreground">
-                      Ngày đặt: {formatDate(selectedOrder.createdAt)}
-                    </p>
-                  )}
-                  <p className="text-sm text-muted-foreground">
-                    Ngày giao: {formatDate(selectedOrder.deliveryDate)}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold">Trạng thái & Tổng tiền</h4>
-                  <div className="flex items-center space-x-2 mt-1">
-                    {(() => {
-                      const StatusIcon =
-                        statusIcons[selectedOrder.status || "Đã tạo"];
-                      return (
-                        <Badge
-                          className={
-                            statusColors[selectedOrder.status || "Đã tạo"]
-                          }
-                        >
-                          <StatusIcon className="w-3 h-3 mr-1" />
-                          {selectedOrder.status}
-                        </Badge>
-                      );
-                    })()}
+        <DrawerContent className="h-full max-w-2xl ml-auto">
+          <div className="mx-auto w-full max-w-4xl p-6">
+            {selectedOrder && (
+              <>
+                <DrawerHeader className="px-0 pt-0">
+                  <DrawerTitle className="flex items-center gap-2">
+                    #{selectedOrder.order_number || "N/A"}
+                    <Badge
+                      className={
+                        statusColors[selectedOrder.status || "pending"]
+                      }
+                    >
+                      {mapStatusLabel[selectedOrder.status || "pending"]}
+                    </Badge>
+                  </DrawerTitle>
+                </DrawerHeader>
+
+                {/* Order Information Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Thông tin đơn hàng</h3>
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-4">
+                    <div className="flex justify-between">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Building className="h-4 w-4" />
+                        <span>Nhà cung cấp</span>
+                      </div>
+                      <span className="font-medium uppercase">
+                        {selectedOrder.distributor?.name || "N/A"}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between pt-2">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <CalendarDays className="h-4 w-4" />
+                        <span>Ngày đặt hàng</span>
+                      </div>
+                      <span className="font-medium uppercase">
+                        {formatDate(selectedOrder.created_at) || "N/A"}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between pt-2">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Truck className="h-4 w-4" />
+                        <span>Ngày giao hàng</span>
+                      </div>
+                      <span className="font-medium uppercase">
+                        {selectedOrder.actual_delivery_date
+                          ? formatDate(selectedOrder.actual_delivery_date)
+                          : "CHƯA CẬP NHẬT"}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-start pt-2">
+                      <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <FileText className="h-4 w-4 mt-0.5" />
+                        <span>Ghi chú</span>
+                      </div>
+                      <div className="w-2/3 text-right">
+                        <p className="font-medium uppercase break-words">
+                          {selectedOrder.notes || "KHÔNG CÓ GHI CHÚ"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-lg font-semibold mt-2">
-                    {formatCurrency(selectedOrder.totalAmount)}
-                  </p>
                 </div>
-              </div>
 
-              <div>
-                <h4 className="font-semibold mb-3">Danh sách sản phẩm</h4>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Tên sản phẩm</TableHead>
-                      <TableHead>Số lượng</TableHead>
-                      <TableHead>Đơn giá</TableHead>
-                      <TableHead>Thành tiền</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {orderItems.map((item) => {
-                      const product = products.find(
-                        (p) => p.id === item.productId
-                      );
-                      return (
-                        <TableRow key={item.id}>
-                          <TableCell>{product?.name || "N/A"}</TableCell>
-                          <TableCell>{item.quantity}</TableCell>
-                          <TableCell>
-                            {formatCurrency(item.unitPrice)}
-                          </TableCell>
-                          <TableCell>
-                            {formatCurrency(item.totalPrice)}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {selectedOrder.notes && (
-                <div>
-                  <h4 className="font-semibold">Ghi chú</h4>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {selectedOrder.notes}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+                {/* Product List Section */}
+                {selectedOrder.items && selectedOrder.items.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold mb-4">
+                      Danh sách sản phẩm
+                    </h3>
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Mã sản phẩm</TableHead>
+                            <TableHead>Tên sản phẩm</TableHead>
+                            <TableHead className="text-right">SL</TableHead>
+                            <TableHead className="text-right">
+                              Đơn giá
+                            </TableHead>
+                            <TableHead className="text-right">
+                              Thành tiền
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {selectedOrder.items.map((item) => (
+                            <TableRow key={item.id}>
+                              <TableCell>
+                                {item.product_code || "N/A"}
+                              </TableCell>
+                              <TableCell>{item.product_name}</TableCell>
+                              <TableCell className="text-right">
+                                {item.quantity_ordered}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatCurrency(item.unit_price)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatCurrency(item.total_price)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {/* Total Row */}
+                          <TableRow className="bg-muted/20">
+                            <TableCell colSpan={4} className="text-right font-medium">
+                              TỔNG TIỀN:
+                            </TableCell>
+                            <TableCell className="text-right font-bold text-blue-600 dark:text-blue-400">
+                              {formatCurrency(selectedOrder.total_amount || 0)}
+                            </TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

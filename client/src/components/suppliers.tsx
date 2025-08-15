@@ -142,10 +142,7 @@ export default function SuppliersPage() {
     (e: React.MouseEvent, supplierId: string) => {
       e.stopPropagation();
       if (!isInCooldown(supplierId) && !!config?.store_name) {
-        syncToKiotviet({
-          id: supplierId,
-          retailerName: config?.store_name,
-        });
+        syncToKiotviet(supplierId);
         startCountdown(supplierId);
       }
     },
