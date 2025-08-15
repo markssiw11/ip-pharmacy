@@ -19,6 +19,7 @@ import {
   useTestConnection,
   useToggleApiConnection,
   useUpdateConnection,
+  IConnectSettingsForm,
 } from "@/services/connect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle, User, Wifi, Edit } from "lucide-react";
@@ -53,7 +54,7 @@ export function ConnectionSettings() {
   const connectionNameInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const { data: config, refetch } = useApiConfig();
+  const { data: config } = useApiConfig();
   const { mutateAsync: testConnection } = useTestConnection();
   const { mutateAsync: connectToKiotViet } = useConnectToKiotViet();
   const {
@@ -114,7 +115,7 @@ export function ConnectionSettings() {
     if (
       createConnectionPending ||
       updateConnectionPending ||
-      !config?.is_active
+      (!config?.is_active && !!config?.id)
     ) {
       return;
     }
@@ -159,23 +160,29 @@ export function ConnectionSettings() {
       return;
     }
 
+    let payload: {
+      id?: string;
+      config?: Partial<IConnectSettingsForm>;
+    } = {
+      config: {
+        username:
+          values.user_name !== config?.username ? values.user_name : undefined,
+        password:
+          values.password !== config?.password ? values.password : undefined,
+        connection_type: "user_password",
+        store_name:
+          values.connection_name !== config?.store_name
+            ? values.connection_name
+            : undefined,
+      },
+    };
+
+    if (!!values.id) {
+      payload.id = values.id;
+    }
+
     try {
-      await testConnection({
-        id: values.id,
-        config: {
-          username:
-            values.user_name !== config?.username
-              ? values.user_name
-              : undefined,
-          password:
-            values.password !== config?.password ? values.password : undefined,
-          connection_type: "user_password",
-          store_name:
-            values.connection_name !== config?.store_name
-              ? values.connection_name
-              : undefined,
-        },
-      });
+      await testConnection(payload);
     } catch (error) {
       toast({
         title: "Connection Failed",
@@ -348,17 +355,19 @@ export function ConnectionSettings() {
                 : "Nhập thông tin tài khoản để kết nối trực tiếp"}
             </p>
           </div>
-          <div className="flex items-center space-x-3">
-            <Label className="text-sm text-gray-600">Bật kết nối</Label>
-            <Switch
-              checked={connectionEnabled}
-              onCheckedChange={handleToggleConnection}
-              disabled={toggleApiMutation.isPending}
-            />
-            {connectionEnabled && (
-              <div className="w-3 h-3 bg-green-500 rounded-full" />
-            )}
-          </div>
+          {!!config?.id && (
+            <div className="flex items-center space-x-3">
+              <Label className="text-sm text-gray-600">Bật kết nối</Label>
+              <Switch
+                checked={connectionEnabled}
+                onCheckedChange={handleToggleConnection}
+                disabled={toggleApiMutation.isPending}
+              />
+              {connectionEnabled && (
+                <div className="w-3 h-3 bg-green-500 rounded-full" />
+              )}
+            </div>
+          )}
         </div>
 
         <Form {...userForm} key="user-form">
@@ -379,12 +388,14 @@ export function ConnectionSettings() {
                       autoComplete="off"
                       placeholder="Nhập tên đăng nhập"
                       disabled={
-                        !connectionEnabled ||
-                        (!!field.value && editingField !== "user_name")
+                        !!config?.id &&
+                        (!connectionEnabled ||
+                          (!!field.value && editingField !== "user_name"))
                       }
                       className={
-                        !connectionEnabled ||
-                        (!!field.value && editingField !== "user_name")
+                        !!config?.id &&
+                        (!connectionEnabled ||
+                          (!!field.value && editingField !== "user_name"))
                           ? "pr-10"
                           : ""
                       }
@@ -425,12 +436,14 @@ export function ConnectionSettings() {
                       autoComplete="off"
                       placeholder="Nhập mật khẩu"
                       disabled={
-                        !connectionEnabled ||
-                        (!!field.value && editingField !== "password")
+                        !!config?.id &&
+                        (!connectionEnabled ||
+                          (!!field.value && editingField !== "password"))
                       }
                       className={
-                        !connectionEnabled ||
-                        (!!field.value && editingField !== "password")
+                        !!config?.id &&
+                        (!connectionEnabled ||
+                          (!!field.value && editingField !== "password"))
                           ? "pr-10"
                           : ""
                       }
@@ -469,11 +482,14 @@ export function ConnectionSettings() {
                       ref={connectionNameInputRef}
                       placeholder="Nhập tên cho kết nối này"
                       disabled={
-                        !connectionEnabled ||
-                        (!!field.value && editingField !== "connection_name")
+                        !!config?.id &&
+                        (!connectionEnabled ||
+                          (!!field.value && editingField !== "connection_name"))
                       }
                       className={
-                        field.value && editingField !== "connection_name"
+                        !!config?.id &&
+                        (!connectionEnabled ||
+                          (!!field.value && editingField !== "connection_name"))
                           ? "pr-10"
                           : ""
                       }
@@ -504,7 +520,7 @@ export function ConnectionSettings() {
               <Button
                 type="button"
                 onClick={handleTestConnection}
-                disabled={!connectionEnabled}
+                disabled={!isDirty || (!connectionEnabled && !!config?.id)}
                 variant="outline"
                 className="border-green-600 text-green-600 hover:bg-green-50"
               >
@@ -514,7 +530,11 @@ export function ConnectionSettings() {
               <Button
                 type="button"
                 onClick={handleConnect}
-                disabled={!connectionEnabled || updateConnectionPending}
+                disabled={
+                  !isDirty ||
+                  (!connectionEnabled && !!config?.id) ||
+                  updateConnectionPending
+                }
                 className="bg-green-600 hover:bg-green-700"
               >
                 <User className="h-4 w-4 mr-2" />

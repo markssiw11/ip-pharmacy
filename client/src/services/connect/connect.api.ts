@@ -54,26 +54,24 @@ const testConnection = async ({
   let payload: Partial<IConnectSettingsForm> = {};
 
   //  Prepare payload
-  if (id) {
-    const key = await generateEncryptedPayload();
+  const key = await generateEncryptedPayload();
 
-    if (!key) {
-      throw new Error("Failed to generate encrypted payload");
-    }
-
-    payload = {
-      id,
-      username: config?.username
-        ? encryptField(config?.username, key)
-        : undefined,
-      password: config?.password
-        ? encryptField(config?.password, key)
-        : undefined,
-      store_name: config?.store_name
-        ? encryptField(config?.store_name, key)
-        : undefined,
-    };
+  if (!key) {
+    throw new Error("Failed to generate encrypted payload");
   }
+
+  payload = {
+    id,
+    username: config?.username
+      ? encryptField(config?.username, key)
+      : undefined,
+    password: config?.password
+      ? encryptField(config?.password, key)
+      : undefined,
+    store_name: config?.store_name
+      ? encryptField(config?.store_name, key)
+      : undefined,
+  };
 
   const res: { data: IConnectSettings } = await request.post(
     "/kiotviet2/test-connection",
