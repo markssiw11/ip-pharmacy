@@ -13,6 +13,7 @@ export const useApiConfig = () => {
     retry: 3,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 };
 
@@ -24,8 +25,15 @@ export function useCreateConnection() {
       const res = await ConnectApi.createConnection(credentials);
       return res.settings;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["connection/status"] });
+    onSuccess: (newSettings) => {
+      // Update cache directly if possible
+      queryClient.setQueryData(["/connection/config"], newSettings);
+
+      // If query wasn't cached yet, fetch it
+      queryClient.fetchQuery({
+        queryKey: ["/connection/config"],
+        queryFn: () => ConnectApi.getConnect().then((res) => res.data),
+      });
     },
   });
 }
@@ -44,8 +52,15 @@ export function useUpdateConnection() {
       const res = await ConnectApi.updateConnection(id, config);
       return res.settings;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/connection/config"] });
+    onSuccess: (newSettings) => {
+      // Update cache directly if possible
+      queryClient.setQueryData(["/connection/config"], newSettings);
+
+      // If query wasn't cached yet, fetch it
+      queryClient.fetchQuery({
+        queryKey: ["/connection/config"],
+        queryFn: () => ConnectApi.getConnect().then((res) => res.data),
+      });
     },
   });
 }
@@ -65,7 +80,7 @@ export function useToggleApiConnection() {
           is_active ? "enabled" : "disabled"
         }`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/connection/config"] });
+      queryClient.fetchQuery({ queryKey: ["/connection/config"] });
     },
     onError: () => {
       toast({
@@ -108,7 +123,7 @@ export function useTestConnection() {
         title: "Success",
         description: "Connection test successful!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/connection/config"] });
+      queryClient.fetchQuery({ queryKey: ["/connection/config"] });
     },
   });
 }
