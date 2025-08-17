@@ -93,7 +93,7 @@ const statusIcons: Record<string, any> = {
 
 const mapStatusLabel: Record<string, any> = {
   pending: "Đã tạo",
-  approved: "Đã xử lý",
+  approved: "Đang giao hàng",
   cancelled: "Huỷ",
   delivered: "Hoàn tất",
 };
@@ -199,7 +199,7 @@ export function PurchaseOrderList() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -229,91 +229,137 @@ export function PurchaseOrderList() {
             Tổng cộng {total} đơn hàng - Trang {currentPage} / {totalPages}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent
+          className="overflow-y-auto"
+          style={{
+            width: "calc(100vw - 350px)",
+          }}
+        >
           {isLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-2 text-gray-600">Đang tải...</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Mã đơn hàng</TableHead>
-                  <TableHead>Nhà cung cấp</TableHead>
-                  <TableHead>Ngày đặt</TableHead>
-                  <TableHead>Ngày giao</TableHead>
-                  <TableHead>Tổng tiền</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead>Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map((order) => {
-                  const StatusIcon = statusIcons[order.status || "pending"];
-                  return (
-                    <TableRow
-                      key={order.id}
-                      onClick={() => setSelectedOrder(order)}
-                      className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                    >
-                      <TableCell className="font-medium">
-                        #{order.order_number}
-                      </TableCell>
-                      <TableCell>{order.distributor?.name || "N/A"}</TableCell>
-                      <TableCell>{formatDate(order.created_at)}</TableCell>
-                      <TableCell>
-                        {order.actual_delivery_date
-                          ? formatDate(order.actual_delivery_date)
-                          : "Chưa cập nhật"}
-                      </TableCell>
-                      <TableCell>
-                        {formatCurrency(order?.total_amount)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={statusColors[order.status || "pending"]}
-                        >
-                          <StatusIcon className="w-3 h-3 mr-1" />
-                          {mapStatusLabel[order.status]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {order.status === "delivered" &&
-                        !order?.is_synced_to_kiotviet ? (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleSyncToKiotViet(order.id)}
-                                  disabled={syncOrderMutation.isPending}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <RefreshCw
-                                    className={`h-4 w-4 ${
-                                      syncOrderMutation.isPending
-                                        ? "animate-spin"
-                                        : ""
-                                    }`}
-                                  />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Đồng bộ đơn hàng lên KiotViet</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        ) : (
-                          <div>Đã đồng bộ</div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-max w-full">
+                <colgroup>
+                  <col className="min-w-[120px]" />
+                  <col className="min-w-[180px]" />
+                  <col className="min-w-[120px]" />
+                  <col className="min-w-[140px]" />
+                  <col className="min-w-[140px]" />
+                  <col className="min-w-[140px]" />
+                  <col className="min-w-[140px]" />
+                  <col className="min-w-[100px]" />
+                </colgroup>
+                <TableHeader className="bg-gray-50 dark:bg-gray-800">
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">
+                      Mã đơn hàng
+                    </TableHead>
+                    <TableHead className="whitespace-nowrap">
+                      Nhà cung cấp
+                    </TableHead>
+                    <TableHead className="whitespace-nowrap">
+                      Ngày đặt
+                    </TableHead>
+                    <TableHead className="whitespace-nowrap">
+                      Ngày giao dự kiến
+                    </TableHead>
+                    <TableHead className="whitespace-nowrap">
+                      Ngày giao thực tế
+                    </TableHead>
+                    <TableHead className="whitespace-nowrap text-right">
+                      Tổng tiền
+                    </TableHead>
+                    <TableHead className="whitespace-nowrap">
+                      Trạng thái
+                    </TableHead>
+                    <TableHead className="whitespace-nowrap">
+                      Thao tác
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => {
+                    const StatusIcon = statusIcons[order.status || "pending"];
+                    return (
+                      <TableRow
+                        key={order.id}
+                        onClick={() => setSelectedOrder(order)}
+                        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
+                        <TableCell className="font-medium whitespace-nowrap">
+                          #{order.order_number}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {order.distributor?.name || "N/A"}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {formatDate(order.created_at)}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {order.expected_delivery_date
+                            ? formatDate(order.expected_delivery_date)
+                            : "Chưa cập nhật"}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {order.actual_delivery_date
+                            ? formatDate(order.actual_delivery_date)
+                            : "Chưa cập nhật"}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-right">
+                          {formatCurrency(order?.total_amount)}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Badge
+                            className={statusColors[order.status || "pending"]}
+                          >
+                            <StatusIcon className="w-3 h-3 mr-1" />
+                            {mapStatusLabel[order.status]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {order.status === "delivered" &&
+                          !order?.is_synced_to_kiotviet ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSyncToKiotViet(order.id);
+                                    }}
+                                    disabled={syncOrderMutation.isPending}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <RefreshCw
+                                      className={`h-4 w-4 ${
+                                        syncOrderMutation.isPending
+                                          ? "animate-spin"
+                                          : ""
+                                      }`}
+                                    />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Đồng bộ đơn hàng lên KiotViet</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <div>Đã đồng bộ</div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
 
           {total > limit && (
@@ -403,7 +449,7 @@ export function PurchaseOrderList() {
                         {selectedOrder.distributor?.name || "N/A"}
                       </span>
                     </div>
-                    
+
                     <div className="flex justify-between pt-2">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <CalendarDays className="h-4 w-4" />
@@ -413,11 +459,11 @@ export function PurchaseOrderList() {
                         {formatDate(selectedOrder.created_at) || "N/A"}
                       </span>
                     </div>
-                    
+
                     <div className="flex justify-between pt-2">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Truck className="h-4 w-4" />
-                        <span>Ngày giao hàng</span>
+                        <span>Ngày giao dự kiến</span>
                       </div>
                       <span className="font-medium uppercase">
                         {selectedOrder.actual_delivery_date
@@ -425,7 +471,7 @@ export function PurchaseOrderList() {
                           : "CHƯA CẬP NHẬT"}
                       </span>
                     </div>
-                    
+
                     <div className="flex justify-between items-start pt-2">
                       <div className="flex items-start gap-2 text-sm text-muted-foreground">
                         <FileText className="h-4 w-4 mt-0.5" />
@@ -481,7 +527,10 @@ export function PurchaseOrderList() {
                           ))}
                           {/* Total Row */}
                           <TableRow className="bg-muted/20">
-                            <TableCell colSpan={4} className="text-right font-medium">
+                            <TableCell
+                              colSpan={4}
+                              className="text-right font-medium"
+                            >
                               TỔNG TIỀN:
                             </TableCell>
                             <TableCell className="text-right font-bold text-blue-600 dark:text-blue-400">

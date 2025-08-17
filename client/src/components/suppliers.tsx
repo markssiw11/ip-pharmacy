@@ -241,7 +241,11 @@ export default function SuppliersPage() {
                                 handleSyncClick(e, supplier.id.toString())
                               }
                             >
-                              <RefreshCw className="w-3 h-3" />
+                              <RefreshCw
+                                className={`w-3 h-3 ${
+                                  isSyncing ? "animate-spin" : ""
+                                }`}
+                              />
                               <span className="sr-only">Đồng bộ</span>
                             </Button>
                             {!canSync(supplier.synced_at) &&

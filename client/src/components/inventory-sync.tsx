@@ -76,12 +76,8 @@ export function InventorySync() {
   }, [inventory?.total]);
 
   const isDisabled = useMemo(() => {
-    return (
-      !config?.connection ||
-      inventorySyncMutation.isPending ||
-      !config?.is_active
-    );
-  }, [inventorySyncMutation?.isPending, config?.connection, config?.is_active]);
+    return inventorySyncMutation.isPending || !config?.is_active;
+  }, [inventorySyncMutation?.isPending, config?.is_active]);
 
   const handleManualSync = async () => {
     try {

@@ -186,7 +186,7 @@ export function PurchaseOrderFormImproved({
                     <FormItem>
                       <FormLabel className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        Ngày giao hàng
+                        Ngày giao dự kiến
                       </FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
