@@ -87,10 +87,8 @@ export function OrderSync() {
   };
 
   const isDisabled = useMemo(() => {
-    return (
-      !config?.connection || orderSyncMutation.isPending || !config?.is_active
-    );
-  }, [orderSyncMutation?.isPending, config?.connection, config?.is_active]);
+    return orderSyncMutation.isPending || !config?.is_active;
+  }, [orderSyncMutation?.isPending, config?.is_active]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

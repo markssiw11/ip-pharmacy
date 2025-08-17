@@ -88,15 +88,9 @@ const connectToKiotViet = async (id: string) => {
     throw new Error("Please provide either id or config");
   }
 
-  const res = await request.post(
-    "/kiotviet2/connect-to-kiotviet",
-    {
-      id,
-    },
-    {
-      withCredentials: true,
-    }
-  );
+  const res = await request.post("/kiotviet2/connect-to-kiotviet", {
+    id,
+  });
   return res.data;
 };
 

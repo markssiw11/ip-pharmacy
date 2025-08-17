@@ -69,12 +69,12 @@ export function AppSidebar({ activeTab, onTabChange }: AppSidebarProps) {
         //   icon: Package,
         //   description: "Quản lý danh sách chi nhánh KiotViet",
         // },
-        {
-          id: "sync-logs",
-          title: "Nhật ký đồng bộ",
-          icon: FileText,
-          description: "Theo dõi quá trình đồng bộ",
-        },
+        // {
+        //   id: "sync-logs",
+        //   title: "Nhật ký đồng bộ",
+        //   icon: FileText,
+        //   description: "Theo dõi quá trình đồng bộ",
+        // },
       ],
     },
     {
