@@ -136,7 +136,7 @@ export function InventorySync() {
               <p className="text-sm text-gray-600">Lần cuối cập nhật</p>
               <p className="text-sm font-medium text-gray-900">
                 {inventoryData.length > 0
-                  ? getRelativeTime(new Date(inventoryData[0]?.created_at))
+                  ? getRelativeTime(new Date(inventoryData[0]?.updated_at))
                   : "Never"}
               </p>
             </div>
