@@ -229,7 +229,7 @@ export function PurchaseOrderList() {
             Tổng cộng {total} đơn hàng - Trang {currentPage} / {totalPages}
           </CardDescription>
         </CardHeader>
-        <CardContent className="overflow-auto max-w-4xl m-auto">
+        <CardContent className="overflow-auto">
           {isLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
