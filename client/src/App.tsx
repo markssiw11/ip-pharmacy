@@ -14,17 +14,6 @@ import { InventorySync } from "@/components/inventory-sync";
 import { BranchSync } from "@/components/branch-sync";
 import SuppliersPage from "./components/suppliers";
 
-declare global {
-  interface Window {
-    Tracker: {
-      init: (id: number, token: string) => void;
-      track: (eventName: string, data?: Record<string, any>) => void;
-      updateProfile: (data: Record<string, any>) => void;
-      setMetadata: (data: Record<string, any>) => void;
-    };
-  }
-}
-
 function AuthenticatedApp() {
   const [activeTab, setActiveTab] = useState("purchase-orders");
 
@@ -119,11 +108,6 @@ function AppContent() {
 }
 
 function App() {
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.Tracker.init(1330, "");
-    }
-  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
